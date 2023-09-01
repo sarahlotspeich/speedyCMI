@@ -2,4 +2,4 @@
 
 export(cmi_fp_eq1)
 export(cmi_fp_eq2)
-export(cmi_fp_eq3)
+export(cmi_fp_eq6)
