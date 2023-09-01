@@ -17,14 +17,14 @@
 #' @export
 
 cmi_fp_eq1 = function(imputation_formula, dist, L, U, Delta, data, maxiter = 100) {
+  # Initialize imputed values
+  data$imp = data[, L] ## start with imp = L
+
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
                 dist = dist,
                 maxiter = maxiter)
-
-  # Initialize imputed values
-  data$imp = data[, W] ## start with imp = W
 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors from the survreg fit
@@ -32,33 +32,42 @@ cmi_fp_eq1 = function(imputation_formula, dist, L, U, Delta, data, maxiter = 100
   # Create an indicator variable for being uncensored
   uncens = data[, Delta] == 1
 
-  # Use adaptive quadrature to estimate
-  ## integral from X = 0 to X = Wi
-  int_surv_W_to_Inf = sapply(
+  # Use adaptive quadrature to estimate integral from X = Li to X = Ui
+  int_surv_L_to_U = sapply(
     X = which(!uncens),
     FUN = function(i) {
       integrate(f = function(x, mean, scale, distribution) {
         1 - psurvreg(q = x, mean = mean, scale = scale, distribution = distribution)
         },
-                lower = data[i, W],
-                upper = Inf,
+                lower = data[i, L],
+                upper = data[i, W],
                 mean = lp[i],
                 scale = fit$scale,
                 distribution = dist)$value
     }
   )
 
-  # Calculate S(W|Z)
-  surv = 1 - psurvreg(q = data[which(!uncens), W],
-                      mean = lp[which(!uncens)],
-                      scale = fit$scale,
-                      distribution = dist)
+  # Calculate S(L|Z)
+  surv_L = 1 - psurvreg(q = data[which(!uncens), L],
+                        mean = lp[which(!uncens)],
+                        scale = fit$scale,
+                        distribution = dist)
 
-  # Calculate MRL(W) = int_surv / S(W|Z)
-  est_mrl = int_surv_W_to_Inf / surv
+  # Calculate S(U|Z)
+  surv_U = 1 - psurvreg(q = data[which(!uncens), U],
+                        mean = lp[which(!uncens)],
+                        scale = fit$scale,
+                        distribution = dist)
 
-  # Calculate imputed value E(X|X>W,Z) = W + MRL(W)
-  data[which(!uncens), "imp"] = data[which(!uncens), W] + est_mrl
+  # Calculate imputed value E(X|L < X <= U, Z) = imp_num / imp_denom
+  ## Numerator: L x S(L|Z) - U x S(U|Z) + integral of S(x|Z) from x = L to x = U
+  imp_num = data[which(!uncens), L] * surv_L + data[which(!uncens), U] * surv_U + int_surv_L_to_U
+
+  ## Denominator: S(L|Z) - S(U|Z)
+  imp_denom = (surv_L - surv_U)
+
+  ## Put them together
+  data[which(!uncens), "imp"] = imp_num / imp_denom
 
   # Return input dataset with appended column imp containing imputed values
   return(
