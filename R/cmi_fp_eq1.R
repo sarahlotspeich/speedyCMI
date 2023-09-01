@@ -16,14 +16,14 @@
 #' @export
 
 cmi_fp_eq1 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
+  # Initialize imputed values
+  data$imp = data[, W] ## start with imp = W
+
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
                 dist = dist,
                 maxiter = maxiter)
-
-  # Initialize imputed values
-  data$imp = data[, W] ## start with imp = W
 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors from the survreg fit
