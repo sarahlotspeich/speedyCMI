@@ -60,8 +60,7 @@ cmi_fp_eq1 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
   data[which(!uncens), "imp"] = data[which(!uncens), W] + est_mrl
 
   # Return input dataset with appended column imp containing imputed values
-  return(
-    list(imputed_data = data,
-         code = !any(is.na(data$imp)))
-    )
+  return_list = list(imputed_data = data,
+                     code = !any(is.na(data$imp)))
+  return(return_list)
 }

@@ -51,7 +51,7 @@ cmi_fp_eq6 = function(imputation_formula, W, Delta, data, infinite_integral = TR
   data[which(!uncens), "imp"] = data[which(!uncens), "imp"] / exp(- inside_exp) ## divide by denominator
 
   # Return input dataset with appended column imp containing imputed values
-  return(list(imputed_data = data,
-              code = !any(is.na(data$imp)))
-         )
+  return_list = list(imputed_data = data,
+                     code = !any(is.na(data$imp)))
+  return(return_list)
 }
