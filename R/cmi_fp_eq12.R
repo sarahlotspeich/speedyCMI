@@ -23,7 +23,7 @@ cmi_fp_eq12 = function(imputation_formula, L, U, Delta, data, maxiter = 100) {
                 maxiter = maxiter)
 
   # Initialize imputed values
-  data$imp = data[, W] ## start with imp = W
+  data$imp = data[, L] ## start with imp = W
 
   # Calculate linear predictor for AFT imputation model
   mu = fit$linear.predictors ## linear predictors from the survreg fit = location
