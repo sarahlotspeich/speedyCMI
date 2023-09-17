@@ -2,5 +2,6 @@
 
 export(cmi_fp_eq1)
 export(cmi_fp_eq12)
-export(cmi_fp_eq2)
+export(cmi_fp_eq14)
+export(cmi_fp_eq2_interval)
 export(cmi_fp_eq6)

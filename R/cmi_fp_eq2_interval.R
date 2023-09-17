@@ -16,7 +16,7 @@
 #'
 #' @export
 
-cmi_fp_eq2 = function(imputation_formula, dist, L, U, Delta, data, maxiter = 100) {
+cmi_fp_eq2_interval = function(imputation_formula, dist, L, U, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, L] ## start with imp = L
 
