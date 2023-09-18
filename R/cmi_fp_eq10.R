@@ -1,6 +1,6 @@
-#' Single, fully parametric conditional mean imputation for a right-censored covariate (log-normal distribution) with conditional means following Equation (9)
+#' Single, fully parametric conditional mean imputation for a right-censored covariate (log-normal distribution) with conditional means following Equation (10)
 #'
-#' Single, fully parametric conditional mean imputation for a right-censored covariate using a log-normal model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (9) of the manuscript.
+#' Single, fully parametric conditional mean imputation for a right-censored covariate using a log-normal model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (10) of the manuscript.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
 #' @param W character, column name for observed values of the censored covariate
@@ -14,7 +14,7 @@
 #'
 #' @export
 
-cmi_fp_eq9 = function(imputation_formula, W, Delta, data, maxiter = 100) {
+cmi_fp_eq10 = function(imputation_formula, W, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, W] ## start with imp = W
 
