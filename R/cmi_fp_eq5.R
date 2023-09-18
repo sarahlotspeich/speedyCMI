@@ -39,7 +39,7 @@ cmi_fp_eq5 = function(imputation_formula, W, Delta, data, maxiter = 100) {
   alpha = weib_shape
   lambda = weib_scale ^ (- weib_shape)
 
-  # Use formula from Appendix for right-censored
+  # Use closed-form to compute the conditional means
   ## Save quantities for use in formula
   inside_exp = lambda[which(!uncens)] * data[which(!uncens), W] ^ alpha ## inside exp() for Weibull survival function
   gamma_surv = pgamma(q = inside_exp,
