@@ -6,7 +6,7 @@
 #' @param dist imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.
 #' @param W character, column name for observed values of the censored covariate
 #' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
-#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and \code{Z}.
+#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #'
 #' @return
@@ -15,7 +15,7 @@
 #'
 #' @export
 
-cmi_fp_eq1 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
+cmi_fp_eq13 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
@@ -28,39 +28,67 @@ cmi_fp_eq1 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors from the survreg fit
 
-  # Transform parameters to agree with R's weibull parameterization
-  weib_shape = 1 / fit$scale
-  weib_scale = exp(lp)
+  if (dist %in% c("weibull", "exponential")) {
+    # Transform parameters to agree with R's weibull parameterization
+    alpha = 1 / fit$scale
+    lambda = exp(lp)
+
+    # Calculate mean life = integral from 0 to \infty of S(t|Z)
+    est_ml = lambda[which(!uncens)] * gamma(1 + fit$scale) ## using formula for Weibull distribution
+
+    # Use adaptive quadrature to estimate
+    ## integral from X = 0 to X = Wi
+    int_surv_0_to_W = sapply(
+      X = which(!uncens),
+      FUN = function(i) {
+        integrate(f = pweibull,
+                  lower = 0,
+                  upper = data[i, W],
+                  shape = alpha,
+                  scale = lambda[i],
+                  lower.tail = FALSE)$value
+      }
+    )
+
+    # Calculate S(W|Z)
+    surv = pweibull(q = data[which(!uncens), W],
+                    shape = alpha,
+                    scale = lambda[which(!uncens)],
+                    lower.tail = FALSE)
+  } else if (dist == "lognormal") {
+    mu = lp
+    sigma = fit$scale
+
+    # Calculate mean life = integral from 0 to \infty of S(t|Z)
+    est_ml = mu[which(!uncens)] ## using formula for log-normal distribution
+
+    # Use adaptive quadrature to estimate
+    ## integral from X = 0 to X = Wi
+    int_surv_0_to_W = sapply(
+      X = which(!uncens),
+      FUN = function(i) {
+        integrate(f = plnorm,
+                  lower = 0,
+                  upper = data[i, W],
+                  meanlog = mu[i],
+                  sdlog = sigma,
+                  lower.tail = FALSE)$value
+      }
+    )
+
+    # Calculate S(W|Z)
+    surv = plnorm(q = data[which(!uncens), W],
+                  meanlog = lp[which(!uncens)],
+                  sdlog = sigma,
+                  lower.tail = FALSE)
+  }
 
   # Create an indicator variable for being uncensored
   uncens = data[, Delta] == 1
 
-  # Calculate mean life = integral from 0 to \infty of S(t|Z)
-  est_ml = weib_scale[which(!uncens)] * gamma(1 + fit$scale) ## using formula for Weibull distribution
-
-  # Use adaptive quadrature to estimate
-  ## integral from X = 0 to X = Wi
-  int_surv_0_to_W = sapply(
-    X = which(!uncens),
-    FUN = function(i) {
-      integrate(f = pweibull,
-                lower = 0,
-                upper = data[i, W],
-                shape = weib_shape,
-                scale = weib_scale[i],
-                lower.tail = FALSE)$value
-    }
-  )
-
   # Subtract integral from mean life to get
   ## integral from X = Wi to X = Infinity
   int_surv_W_to_Inf = est_ml - int_surv_0_to_W
-
-  # Calculate S(W|Z)
-  surv = 1 - psurvreg(q = data[which(!uncens), W],
-                      mean = lp[which(!uncens)],
-                      scale = fit$scale,
-                      distribution = dist)
 
   # Calculate MRL(W) = int_surv / S(W|Z)
   est_mrl = int_surv_W_to_Inf / surv
