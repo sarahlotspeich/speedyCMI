@@ -15,7 +15,7 @@ cmi_fp_eq1(imputation_formula, dist, W, Delta, data, maxiter = 100)
 
 \item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
 
-\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and \code{Z}.}
+\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
