@@ -81,6 +81,34 @@ cmi_fp_eq13 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) 
                   meanlog = lp[which(!uncens)],
                   sdlog = sigma,
                   lower.tail = FALSE)
+  } else if (dist == "loglogistic") {
+    # Transform parameters to agree with R's weibull parameterization
+    alpha = 1 / fit$scale
+    lambda = exp(lp)
+
+    # Calculate mean life = integral from 0 to \infty of S(t|Z)
+    if (alpha > 1) {
+      est_ml = (lambda[which(!uncens)] * pi / alpha) / sin(pi / alpha) ## using formula for log-logistic distribution
+    } else {
+      est_ml = rep(NA, length(which(!uncens))) ## undefined if shape alpha <= 1
+    }
+
+    # Use adaptive quadrature to estimate
+    ## integral from X = 0 to X = Wi
+    int_surv_0_to_W = sapply(
+      X = which(!uncens),
+      FUN = function(i) {
+        integrate(f = pweibull,
+                  lower = 0,
+                  upper = data[i, W],
+                  shape = alpha,
+                  scale = lambda[i],
+                  lower.tail = FALSE)$value
+      }
+    )
+
+    # Calculate S(W|Z)
+    surv = 1 / (1 + (data[which(!uncens), W] / lambda[which(!uncens)]) ^ alpha)
   }
 
   # Create an indicator variable for being uncensored
