@@ -3,7 +3,7 @@
 #' Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means, as in Equation (13) of the manuscript.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
-#' @param dist imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.
+#' @param dist imputation model distribution passed through to \code{survreg}. Options of \code{dist =} \code{"exponential"}, \code{"loglogistic"}, \code{"lognormal"}, and \code{"weibull"} currently accepted.
 #' @param W character, column name for observed values of the censored covariate
 #' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
@@ -86,29 +86,37 @@ cmi_fp_eq13 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) 
     alpha = 1 / fit$scale
     lambda = exp(lp)
 
-    # Calculate mean life = integral from 0 to \infty of S(t|Z)
+
     if (alpha > 1) {
+      # Calculate mean life = integral from 0 to \infty of S(t|Z)
       est_ml = (lambda[which(!uncens)] * pi / alpha) / sin(pi / alpha) ## using formula for log-logistic distribution
+
+      # Use adaptive quadrature to estimate
+      ## integral from X = 0 to X = Wi
+      int_surv_0_to_W = sapply(
+        X = which(!uncens),
+        FUN = function(i) {
+          integrate(f = pweibull,
+                    lower = 0,
+                    upper = data[i, W],
+                    shape = alpha,
+                    scale = lambda[i],
+                    lower.tail = FALSE)$value
+        }
+      )
+
+      # Calculate S(W|Z)
+      surv = 1 / (1 + (data[which(!uncens), W] / lambda[which(!uncens)]) ^ alpha)
     } else {
-      est_ml = rep(NA, length(which(!uncens))) ## undefined if shape alpha <= 1
+      # Can't calculate mean life; expected value is undefined if shape alpha <= 1
+      ## Make all imputed values NA
+      data[which(!uncens), "imp"] = NA
+
+      # Return input dataset with appended column imp containing imputed values
+      return_list = list(imputed_data = data,
+                         code = !any(is.na(data$imp)))
+      return(return_list)
     }
-
-    # Use adaptive quadrature to estimate
-    ## integral from X = 0 to X = Wi
-    int_surv_0_to_W = sapply(
-      X = which(!uncens),
-      FUN = function(i) {
-        integrate(f = pweibull,
-                  lower = 0,
-                  upper = data[i, W],
-                  shape = alpha,
-                  scale = lambda[i],
-                  lower.tail = FALSE)$value
-      }
-    )
-
-    # Calculate S(W|Z)
-    surv = 1 / (1 + (data[which(!uncens), W] / lambda[which(!uncens)]) ^ alpha)
   }
 
   # Create an indicator variable for being uncensored

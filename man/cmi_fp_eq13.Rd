@@ -9,7 +9,7 @@ cmi_fp_eq13(imputation_formula, dist, W, Delta, data, maxiter = 100)
 \arguments{
 \item{imputation_formula}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
 
-\item{dist}{imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.}
+\item{dist}{imputation model distribution passed through to \code{survreg}. Options of \code{dist =} \code{"exponential"}, \code{"loglogistic"}, \code{"lognormal"}, and \code{"weibull"} currently accepted.}
 
 \item{W}{character, column name for observed values of the censored covariate}
 
