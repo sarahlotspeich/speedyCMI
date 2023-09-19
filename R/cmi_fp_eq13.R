@@ -96,11 +96,9 @@ cmi_fp_eq13 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) 
       int_surv_0_to_W = sapply(
         X = which(!uncens),
         FUN = function(i) {
-          integrate(f = pweibull,
+          integrate(f = function(x) 1 / (1 + (data[i, W] / lambda[i]) ^ alpha),
                     lower = 0,
                     upper = data[i, W],
-                    shape = alpha,
-                    scale = lambda[i],
                     lower.tail = FALSE)$value
         }
       )
