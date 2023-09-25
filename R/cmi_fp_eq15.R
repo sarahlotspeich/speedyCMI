@@ -51,6 +51,12 @@ cmi_fp_eq15 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, 
     }
   )
 
+  # Calculate S(W|Z)
+  surv = 1 - psurvreg(q = data[which(!uncens), W],
+                      mean = lp[which(!uncens)],
+                      scale = fit$scale,
+                      distribution = dist)
+
   # Calculate MRL(W) = int_surv / S(W|Z)
   est_mrl = int_surv_W_to_Inf / surv
 
