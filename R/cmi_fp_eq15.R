@@ -15,6 +15,9 @@
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
 #' @export
+#' @importFrom survival survreg
+#' @importFrom survival Surv
+#' @importFrom survival psurvreg
 
 cmi_fp_eq15 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, use_cumulative_hazard = FALSE) {
   # Fit AFT imputation model for X ~ Z
