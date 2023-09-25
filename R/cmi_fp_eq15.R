@@ -32,6 +32,9 @@ cmi_fp_eq15 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors from the survreg fit
 
+  # Create an indicator variable for being uncensored
+  uncens = data[, Delta] == 1
+
   # Use adaptive quadrature (and clever transformation) to estimate
   ## integral from X = Wi to X = Infinity
   int_surv_W_to_Inf = sapply(
@@ -47,9 +50,6 @@ cmi_fp_eq15 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, 
                 use_cumulative_hazard = use_cumulative_hazard)$value
     }
   )
-
-  # Create an indicator variable for being uncensored
-  uncens = data[, Delta] == 1
 
   # Calculate MRL(W) = int_surv / S(W|Z)
   est_mrl = int_surv_W_to_Inf / surv
