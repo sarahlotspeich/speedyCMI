@@ -2,7 +2,7 @@
 % Please edit documentation in R/cmi_fp_eq14.R
 \name{cmi_fp_eq14}
 \alias{cmi_fp_eq14}
-\title{Single, fully parametric imputation for a right-censored covariate with conditional means following Equation (13)}
+\title{Single, fully parametric imputation for a right-censored covariate with conditional means following Equation (14)}
 \usage{
 cmi_fp_eq14(imputation_formula, dist, W, Delta, data, maxiter = 100)
 }
@@ -24,5 +24,5 @@ cmi_fp_eq14(imputation_formula, dist, W, Delta, data, maxiter = 100)
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 }
 \description{
-Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means, as in Equation (13) of the manuscript.
+Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means, as in Equation (14) of the manuscript.
 }
