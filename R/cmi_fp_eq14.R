@@ -31,6 +31,9 @@ cmi_fp_eq14 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors from the survreg fit
 
+  # Create an indicator variable for being uncensored
+  uncens = data[, Delta] == 1
+
   if (dist %in% c("weibull", "exponential")) {
     # Transform parameters to agree with R's weibull parameterization
     alpha = 1 / fit$scale
@@ -120,9 +123,6 @@ cmi_fp_eq14 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) 
       return(return_list)
     }
   }
-
-  # Create an indicator variable for being uncensored
-  uncens = data[, Delta] == 1
 
   # Subtract integral from mean life to get
   ## integral from X = Wi to X = Infinity
