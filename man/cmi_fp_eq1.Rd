@@ -2,9 +2,18 @@
 % Please edit documentation in R/cmi_fp_eq1.R
 \name{cmi_fp_eq1}
 \alias{cmi_fp_eq1}
-\title{Single, fully parametric imputation for a right-censored covariate with conditional means following Equation (1)}
+\title{Fully parametric imputation for a right-censored covariate with conditional means following Equation (1)}
 \usage{
-cmi_fp_eq1(imputation_formula, dist, W, Delta, data, maxiter = 100)
+cmi_fp_eq1(
+  imputation_formula,
+  dist,
+  W,
+  Delta,
+  data,
+  maxiter = 100,
+  boots = 0,
+  seed = 123
+)
 }
 \arguments{
 \item{imputation_formula}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
@@ -17,6 +26,10 @@ cmi_fp_eq1(imputation_formula, dist, W, Delta, data, maxiter = 100)
 
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
+\item{boots}{(optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.}
+
+\item{seed}{(optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{123}.}
+
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
 \value{
@@ -24,5 +37,5 @@ cmi_fp_eq1(imputation_formula, dist, W, Delta, data, maxiter = 100)
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 }
 \description{
-Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means, as in Equation (1) of the manuscript.
+Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means, as in Equation (1) of the manuscript.
 }
