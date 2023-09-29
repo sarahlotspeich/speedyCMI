@@ -1,14 +1,16 @@
-#' Single, fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (6)
+#' Fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (5)
 #'
-#' Single, fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
+#' Fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
-#' @param W character, column name for observed values of the censored covariate
-#' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
+#' @param W character, column name for observed values of the censored covariate.
+#' @param Delta character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
-#' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
+#' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{max_iter = 100}.
+#' @param boots (optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.
+#' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{123}.
 #'
-#' @return
+#' @return A list (or, in the case of multiple imputation, a list of lists) containing:
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
@@ -17,44 +19,28 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq5 = function(imputation_formula, W, Delta, data, maxiter = 100) {
-  # Initialize imputed values
-  data$imp = data[, W] ## start with imp = W
-
-  # Fit AFT imputation model for X ~ Z
-  fit = survreg(formula = imputation_formula,
-                data = data,
-                dist = "weibull",
-                maxiter = maxiter)
-
-  # Calculate linear predictor for AFT imputation model
-  lp = fit$linear.predictors ## linear predictors
-
-  # Transform parameters to agree with R's weibull parameterization
-  weib_shape = 1 / fit$scale
-  weib_scale = exp(lp)
-
-  # Create an indicator variable for being uncensored
-  uncens = data[, Delta] == 1
-
-  # Use closed-form to compute the conditional mean
-  ## Transform parameters to agree with paper's parameterization
-  alpha = weib_shape
-  lambda = weib_scale ^ (- weib_shape)
-
-  # Use closed-form to compute the conditional means
-  ## Save quantities for use in formula
-  inside_exp = lambda[which(!uncens)] * data[which(!uncens), W] ^ alpha ## inside exp() for Weibull survival function
-  gamma_surv = pgamma(q = inside_exp,
-                      shape = 1 / alpha,
-                      scale = 1,
-                      lower.tail = FALSE) ## survival function of a gamma
-  data[which(!uncens), "imp"] = data[which(!uncens), W] * exp(- inside_exp) +
-    gamma(1 / alpha) / (alpha * lambda[which(!uncens)] ^ (1 / alpha)) * gamma_surv ## start with numerator
-  data[which(!uncens), "imp"] = data[which(!uncens), "imp"] / exp(- inside_exp) ## divide by denominator
-
-  # Return input dataset with appended column imp containing imputed values
-  return_list = list(imputed_data = data,
-                     code = !any(is.na(data$imp)))
+cmi_fp_eq5 = function(imputation_formula, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
+  # Single imputation
+  if (boots == 0) {
+    return_list = cmi_fp_eq5_single(imputation_formula = imputation_formula,
+                                    W = W,
+                                    Delta = Delta,
+                                    data = data,
+                                    maxiter = maxiter)
+  } else { # Multiple imputation
+    return_list = list()
+    set.seed(seed)
+    for (b in 1:boots) {
+      b_rows = sample(x = 1:nrow(data),
+                      size = nrow(data),
+                      replace = TRUE)
+      b_data = data[b_rows, ]
+      return_list[[b]] = cmi_fp_eq5_single(imputation_formula = imputation_formula,
+                                           W = W,
+                                           Delta = Delta,
+                                           data = b_data,
+                                           maxiter = maxiter)
+    }
+  }
   return(return_list)
 }

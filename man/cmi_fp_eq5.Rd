@@ -2,25 +2,38 @@
 % Please edit documentation in R/cmi_fp_eq5.R
 \name{cmi_fp_eq5}
 \alias{cmi_fp_eq5}
-\title{Single, fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (6)}
+\title{Fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (5)}
 \usage{
-cmi_fp_eq5(imputation_formula, W, Delta, data, maxiter = 100)
+cmi_fp_eq5(
+  imputation_formula,
+  W,
+  Delta,
+  data,
+  maxiter = 100,
+  boots = 0,
+  seed = 123
+)
 }
 \arguments{
 \item{imputation_formula}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
 
-\item{W}{character, column name for observed values of the censored covariate}
+\item{W}{character, column name for observed values of the censored covariate.}
 
-\item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
+\item{Delta}{character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.}
 
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
-\item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
+\item{boots}{(optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.}
+
+\item{seed}{(optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{123}.}
+
+\item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{max_iter = 100}.}
 }
 \value{
+A list (or, in the case of multiple imputation, a list of lists) containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 }
 \description{
-Single, fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
+Fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
 }
