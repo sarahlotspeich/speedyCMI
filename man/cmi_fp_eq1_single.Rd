@@ -20,6 +20,7 @@ cmi_fp_eq1_single(imputation_formula, dist, W, Delta, data, maxiter = 100)
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
 \value{
+A list containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 }
