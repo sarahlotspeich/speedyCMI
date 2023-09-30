@@ -1,4 +1,4 @@
-#' Fully parametric imputation for a right-censored covariate with conditional means following Equation (1)
+#' Fully parametric imputation for a right-censored covariate with conditional means using the original integral
 #'
 #' Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means, as in Equation (1) of the manuscript.
 #'
@@ -20,7 +20,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq1 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
+cmi_fp_original = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
   if (boots == 0) {
     return_list = cmi_fp_eq1_single(imputation_formula = imputation_formula,
                                     dist = dist,
