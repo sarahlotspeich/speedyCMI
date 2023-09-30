@@ -25,7 +25,7 @@ cmi_fp_eq15_single(
 
 \item{data}{dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
-\item{use_cumulative_hazard}{logical, if \code{TRUE} the survival function is transformed to the cumulative hazard before integration. Default is \code{FALSE}.}
+\item{use_cumulative_hazard}{logical, if \code{TRUE} the survival function is transformed to the cumulative hazard before integration. Default is \code{TRUE}.}
 
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
