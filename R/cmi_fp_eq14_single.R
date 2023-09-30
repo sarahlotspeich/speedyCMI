@@ -1,6 +1,6 @@
-#' Single, fully parametric imputation for a right-censored covariate with conditional means following Equation (14)
+#' Single, fully parametric imputation for a right-censored covariate with conditional means using the stabilized integral with mean
 #'
-#' Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means, as in Equation (14) of the manuscript.
+#' Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means using the stabilized integral.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
 #' @param dist imputation model distribution passed through to \code{survreg}. Options of \code{dist =} \code{"exponential"}, \code{"loglogistic"}, \code{"lognormal"}, and \code{"weibull"} currently accepted.
@@ -13,12 +13,11 @@
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
-#' @export
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq14 = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
+cmi_fp_eq14_single = function(imputation_formula, dist, W, Delta, data, maxiter = 100) {
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
