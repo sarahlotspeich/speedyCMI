@@ -1,6 +1,6 @@
-#' Fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (5)
+#' Fully parametric conditional mean imputation for a right-censored covariate with conditional means using the analytical solution
 #'
-#' Fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
+#' Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
 #' @param W character, column name for observed values of the censored covariate.
@@ -19,14 +19,16 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq5 = function(imputation_formula, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
+cmi_fp_anlytical = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
   # Single imputation
   if (boots == 0) {
-    return_list = cmi_fp_eq5_single(imputation_formula = imputation_formula,
-                                    W = W,
-                                    Delta = Delta,
-                                    data = data,
-                                    maxiter = maxiter)
+    if (toupper(dist) == "WEIBULL") {
+      return_list = cmi_fp_eq5_single(imputation_formula = imputation_formula,
+                                      W = W,
+                                      Delta = Delta,
+                                      data = data,
+                                      maxiter = maxiter)
+    }
   } else { # Multiple imputation
     return_list = list()
     set.seed(seed)
@@ -35,11 +37,13 @@ cmi_fp_eq5 = function(imputation_formula, W, Delta, data, maxiter = 100, boots =
                       size = nrow(data),
                       replace = TRUE)
       b_data = data[b_rows, ]
-      return_list[[b]] = cmi_fp_eq5_single(imputation_formula = imputation_formula,
-                                           W = W,
-                                           Delta = Delta,
-                                           data = b_data,
-                                           maxiter = maxiter)
+      if (toupper(dist) == "WEIBULL") {
+        return_list[[b]] = cmi_fp_eq5_single(imputation_formula = imputation_formula,
+                                             W = W,
+                                             Delta = Delta,
+                                             data = b_data,
+                                             maxiter = maxiter)
+      }
     }
   }
   return(return_list)
