@@ -3,6 +3,7 @@
 #' Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
+#' @param dist imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.
 #' @param W character, column name for observed values of the censored covariate.
 #' @param Delta character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
@@ -19,7 +20,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_anlytical = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
+cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
   # Single imputation
   if (boots == 0) {
     if (toupper(dist) == "WEIBULL") {
