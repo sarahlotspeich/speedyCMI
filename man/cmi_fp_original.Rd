@@ -38,5 +38,5 @@ A list (or, in the case of multiple imputation, a list of lists) containing:
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 }
 \description{
-Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means, as in Equation (1) of the manuscript.
+Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means.
 }
