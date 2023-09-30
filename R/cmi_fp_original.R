@@ -9,7 +9,7 @@
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #' @param boots (optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.
-#' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{123}.
+#' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{NULL}, which does not reset \code{seed}.
 #'
 #' @return A list (or, in the case of multiple imputation, a list of lists) containing:
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
@@ -20,7 +20,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_original = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = 123) {
+cmi_fp_original = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = NULL) {
   if (boots == 0) {
     return_list = cmi_fp_eq1_single(imputation_formula = imputation_formula,
                                     dist = dist,
@@ -29,7 +29,9 @@ cmi_fp_original = function(imputation_formula, dist, W, Delta, data, maxiter = 1
                                     data = data,
                                     maxiter = maxiter)
   } else {
-    set.seed(seed)
+    if (!is.null(seed)) {
+      set.seed(seed)
+    }
     return_list = list()
     for (b in 1:boots) {
       re_data = data[sample(x = 1:nrow(data), size = nrow(data), replace = TRUE), ]
