@@ -10,16 +10,15 @@
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #' @param use_cumulative_hazard logical, if \code{TRUE} the survival function is transformed to the cumulative hazard before integration. Default is \code{FALSE}.
 #'
-#' @return
+#' @return A list containing:
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
-#' @export
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq15 = function(imputation_formula, dist, W, Delta, data, maxiter = 100, use_cumulative_hazard = FALSE) {
+cmi_fp_eq15_single = function(imputation_formula, dist, W, Delta, data, maxiter = 100, use_cumulative_hazard = FALSE) {
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
