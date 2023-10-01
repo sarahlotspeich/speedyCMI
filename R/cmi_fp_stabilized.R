@@ -8,6 +8,7 @@
 #' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
 #' @param with_mean logical, if \code{TRUE} the stabilized integral with the mean is used. Default is \code{FALSE}.
+#' @param use_cumulative_hazard (optional) logical, if \code{use_cumulative_hazard = TRUE} and \code{with_mean = FALSE} the survival function is transformed to the cumulative hazard before integration. Default is \code{TRUE}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #' @param boots (optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.
 #' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{NULL}, which does not reset \code{seed}.
@@ -21,7 +22,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean = FALSE, maxiter = 100, boots = 0, seed = NULL) {
+cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean = FALSE, use_cumulative_hazard = TRUE, maxiter = 100, boots = 0, seed = NULL) {
   if (with_mean) {
     if (boots == 0) {
       return_list = cmi_fp_eq14_single(imputation_formula = imputation_formula,
@@ -52,7 +53,8 @@ cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean
                                        W = W,
                                        Delta = Delta,
                                        data = data,
-                                       maxiter = maxiter)
+                                       maxiter = maxiter,
+                                       use_cumulative_hazard = use_cumulative_hazard)
     } else {
       if (!is.null(seed)) {
         set.seed(seed)
@@ -65,7 +67,8 @@ cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean
                                               W = W,
                                               Delta = Delta,
                                               data = re_data,
-                                              maxiter = maxiter)
+                                              maxiter = maxiter,
+                                              use_cumulative_hazard = use_cumulative_hazard)
       }
     }
   }

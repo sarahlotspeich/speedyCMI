@@ -11,6 +11,7 @@ cmi_fp_stabilized(
   Delta,
   data,
   with_mean = FALSE,
+  use_cumulative_hazard = TRUE,
   maxiter = 100,
   boots = 0,
   seed = NULL
@@ -28,6 +29,8 @@ cmi_fp_stabilized(
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
 \item{with_mean}{logical, if \code{TRUE} the stabilized integral with the mean is used. Default is \code{FALSE}.}
+
+\item{use_cumulative_hazard}{(optional) logical, if \code{use_cumulative_hazard = TRUE} and \code{with_mean = FALSE} the survival function is transformed to the cumulative hazard before integration. Default is \code{TRUE}.}
 
 \item{boots}{(optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.}
 
