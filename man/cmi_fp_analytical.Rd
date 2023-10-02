@@ -12,7 +12,7 @@ cmi_fp_analytical(
   data,
   maxiter = 100,
   boots = 0,
-  seed = 123
+  seed = NULL
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ cmi_fp_analytical(
 
 \item{boots}{(optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.}
 
-\item{seed}{(optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{123}.}
+\item{seed}{(optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{NULL}, which does not reset \code{seed}.}
 
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{max_iter = 100}.}
 }
