@@ -7,7 +7,6 @@
 
 # Load packages
 library(ggplot2) ## for plots
-library(latex2exp) ## for LaTex in plot labels
 
 # Load simulation results from GitHub
 sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/mi_vary_B.csv")
