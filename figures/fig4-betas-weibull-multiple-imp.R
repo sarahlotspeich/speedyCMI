@@ -18,9 +18,6 @@ sett |>
   dplyr::mutate(num_imps = factor(x = num_imps,
                                   levels = c(0, 5, 10, 20, 40),
                                   labels = c("B = 1", "B = 5", "B = 10", "B = 20", "B = 40")),
-                censoring = factor(x = censoring,
-                                   levels = c("light", "heavy", "extra heavy"),
-                                   labels = c("Light Censoring", "Heavy Censoring", "Extra Heavy Censoring")),
                 integral = factor(x = integral,
                                   levels = c("beta_sp", "beta_old", "beta_new2", "beta_new", "beta_analytical"),
                                   labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytical Solution)"))
