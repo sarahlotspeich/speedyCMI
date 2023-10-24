@@ -1,7 +1,6 @@
 #############################################################################################
-# Create FIGURE 1 from the manuscript, with caption "Average computing runtime per-replication
-## for single imputation simulations (in seconds). The solid and dashed lines connect the mean
-## and median per-replicate computing times, respectively..
+# Create FIGURE 1 from the manuscript, with caption beginning ###############################
+## "Average computing runtime per-replication for single imputation simulations..." #########
 #############################################################################################
 
 # Load packages
