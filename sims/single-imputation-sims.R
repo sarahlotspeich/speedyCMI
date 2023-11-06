@@ -1,5 +1,6 @@
 # Install package
-devtools::install_github(repo = "sarahlotspeich/SpeedyCMI")
+# Run once:
+# devtools::install_github(repo = "sarahlotspeich/SpeedyCMI")
 
 # Load packages
 library(imputeCensRd) ## to impute (semiparametric)
