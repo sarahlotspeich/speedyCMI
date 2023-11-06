@@ -7,7 +7,7 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/si_single_imp.csv")
+sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/single-imputation-sims.csv")
 
 # Create plot
 sett |>
