@@ -23,3 +23,11 @@ devtools::install_github(repo = "sarahlotspeich/speedyCMI",
   - [Script (Run Simulations)](sims/single-imputation-sims.R)
   - [Script (Make Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
   - [Data (Simulation Results)](sims/single-imputation-sims.csv)
+
+**Figure 2.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from each single imputation approach. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$. 
+
+![alt text](figures/fig2-betas-weibull-single-imp.png)
+
+  - [Script (Run Simulations)](sims/single-imputation-sims.R)
+  - [Script (Make Figure)](figures/fig2-betas-weibull-single-imp.R)
+  - [Data (Simulation Results)](sims/single-imputation-sims.csv)
