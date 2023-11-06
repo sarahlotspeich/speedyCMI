@@ -55,3 +55,11 @@ devtools::install_github(repo = "sarahlotspeich/speedyCMI",
   - [Script (Run Simulations)](sims/single-imputation-sims.R)
   - [Script (Make Figure)](figures/figS1-total-computing-time-weibull-single-imp.R)
   - [Data (Simulation Results)](sims/single-imputation-sims.csv)
+
+**Figure S2.** Total computing runtime across 1000 replicates for imputation simulations (in seconds) with an increasing number of imputations $B$. 
+
+![alt text](figures/figS2-total-computing-time-weibull-multiple-imp.png)
+
+  - [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+  - [Script (Make Figure)](figures/figS2-total-computing-time-weibull-multiple-imp.R)
+  - [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
