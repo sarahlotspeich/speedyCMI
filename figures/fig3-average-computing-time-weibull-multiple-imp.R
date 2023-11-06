@@ -7,14 +7,14 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/mi_vary_B.csv")
+sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/multiple-imputation-sims.csv")
 
 # Create plot
 sett |>
   dplyr::select(sim, num_imps, censoring, dplyr::starts_with("time")) |>
   tidyr::gather("integral", "time", -c(1:3)) |>
-  dplyr::mutate(num_imps = factor(x = num_imps, 
-                                  levels = c(0, 5, 10, 20, 40), 
+  dplyr::mutate(num_imps = factor(x = num_imps,
+                                  levels = c(0, 5, 10, 20, 40),
                                   labels = c("B = 1", "B = 5", "B = 10", "B = 20", "B = 40")),
                 integral = factor(x = integral,
                                   levels = c("time_sp", "time_old", "time_new2", "time_new", "time_analytical"),

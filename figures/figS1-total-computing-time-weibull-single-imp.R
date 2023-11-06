@@ -1,6 +1,6 @@
 #############################################################################################
-# Create FIGURE 1 from the manuscript, with caption beginning ###############################
-## "Average computing runtime per-replication for single imputation simulations..." #########
+# Create FIGURE S1 from the manuscript, with caption beginning ##############################
+## "Total computing runtime per-replication for single imputation simulations..." ###########
 #############################################################################################
 
 # Load packages
