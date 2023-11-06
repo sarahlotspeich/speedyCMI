@@ -14,6 +14,26 @@ devtools::install_github(repo = "sarahlotspeich/speedyCMI",
                          ref = "main")
 ```
 
+## Functions 
+
+The `speedyCMI` package contains separate functions to run conditional mean imputation (CMI) for censored covariates using the different formulas discussed in the corresponding paper. Using the following simulated dataset, 
+
+``` r
+set.seed(918) # For reproducibility
+n = 1000 # Sample size
+z = rbinom(n = n, size = 1, prob = 0.5) # Uncensored covariate
+x = rweibull(n = n, shape = 0.75, scale = 0.25 + 0.25 * z)  # To-be-censored covariate
+e = rnorm(n = n, mean = 0, sd = 1) # Random errors
+y = 1 + 0.5 * x + 0.25 * z + e # Continuous outcome
+q = 0.5 # Rate parameter for censoring
+c = rexp(n = n, rate = q) # Random censoring mechanism
+w = pmin(x, c) # Observed covariate value
+d = as.numeric(x <= c) # "Event" indicator
+dat = data.frame(x, z, w, y, d) # Construct data set
+```
+
+we provide a brief overview of these functions and their use below. 
+
 ## Figures 
 
 **Figure 1.** Average computing runtime per-replication for single imputation simulations (in seconds). The solid and dashed lines connect the mean and median per-replicate computing times, respectively.
