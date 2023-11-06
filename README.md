@@ -10,8 +10,7 @@ package and can be done in the following way.
 
 ``` r
 # Install the package
-devtools::install_github(repo = "sarahlotspeich/speedyCMI", 
-                         ref = "main")
+devtools::install_github(repo = "sarahlotspeich/speedyCMI")
 ```
 
 ## Functions 
