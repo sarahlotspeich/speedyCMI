@@ -18,6 +18,6 @@ devtools::install_github(repo = "sarahlotspeich/speedyCMI",
 
 **Figure 1.** Average computing runtime per-replication for single imputation simulations (in seconds). The solid and dashed lines connect the mean and median per-replicate computing times, respectively.
 
-  - [Script (Run Simulations)](sims/)
+  - [Script (Run Simulations)](sims/single-imputation-sims.R)
   - [Script (Make Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
-  - [Data (Simulation Results)](sims/si_single_imp.csv)
+  - [Data (Simulation Results)](sims/single-imputation-sims.csv)
