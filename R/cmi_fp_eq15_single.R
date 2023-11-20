@@ -8,7 +8,7 @@
 #' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
 #' @param data dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
-#' @param use_cumulative_hazard logical, if \code{TRUE} the survival function is transformed to the cumulative hazard before integration. Default is \code{FALSE}.
+#' @param use_cumulative_hazard logical, if \code{TRUE} the survival function is transformed to the cumulative hazard before integration. Default is \code{TRUE}.
 #'
 #' @return A list containing:
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
