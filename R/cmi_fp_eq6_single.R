@@ -1,6 +1,6 @@
 #' Single, fully parametric conditional mean imputation for a right-censored covariate (exponential distribution) with conditional means following Equation (6)
 #'
-#' Single, fully parametric conditional mean imputation for a right-censored covariate using an exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (6) of the manuscript.
+#' Single, fully parametric conditional mean imputation for a right-censored covariate using an exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
 #' @param W character, column name for observed values of the censored covariate
@@ -12,12 +12,11 @@
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
-#' @export
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq6 = function(imputation_formula, W, Delta, data, maxiter = 100) {
+cmi_fp_eq6_single = function(imputation_formula, W, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, W] ## start with imp = W
 
@@ -31,16 +30,16 @@ cmi_fp_eq6 = function(imputation_formula, W, Delta, data, maxiter = 100) {
   lp = fit$linear.predictors ## linear predictors
 
   # Transform parameters to agree with R's weibull parameterization
-  weib_shape = 1 / fit$scale
-  weib_scale = exp(lp)
+  expo_scale = exp(lp)
 
   # Create an indicator variable for being uncensored
   uncens = data[, Delta] == 1
 
   # Use closed-form to compute the conditional mean
   ## Transform parameters to agree with paper's parameterization
-  alpha = weib_shape
-  lambda = weib_scale ^ (- weib_shape)
+  lambda = 1 / expo_scale
+
+  # Use closed-form to compute the conditional means
   data[which(!uncens), "imp"] = data[which(!uncens), "imp"] + 1 / lambda[which(!uncens)]
 
   # Return input dataset with appended column imp containing imputed values
