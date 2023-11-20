@@ -23,7 +23,7 @@ cmi_fp_eq10_single = function(imputation_formula, W, Delta, data, maxiter = 100)
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_formula,
                 data = data,
-                dist = "log-normal",
+                dist = "lognormal",
                 maxiter = maxiter)
 
   # Calculate linear predictor for AFT imputation model
