@@ -24,7 +24,15 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
   # Single imputation
   if (boots == 0) {
     if (toupper(dist) == "WEIBULL") {
+      ## If Weibull, use Equation (5)
       return_list = cmi_fp_eq5_single(imputation_formula = imputation_formula,
+                                      W = W,
+                                      Delta = Delta,
+                                      data = data,
+                                      maxiter = maxiter)
+    } else if (toupper(dist) == "EXPONENTIAL") {
+      ## If exponential, use Equation (6)
+      return_list = cmi_fp_eq6_single(imputation_formula = imputation_formula,
                                       W = W,
                                       Delta = Delta,
                                       data = data,
@@ -46,7 +54,14 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                                              Delta = Delta,
                                              data = b_data,
                                              maxiter = maxiter)
-      }
+      } else if (toupper(dist) == "EXPONENTIAL") {
+        ## If exponential, use Equation (6)
+        return_list[[b]] = cmi_fp_eq6_single(imputation_formula = imputation_formula,
+                                             W = W,
+                                             Delta = Delta,
+                                             data = b_data,
+                                             maxiter = maxiter)
+        }
     }
   }
   return(return_list)
