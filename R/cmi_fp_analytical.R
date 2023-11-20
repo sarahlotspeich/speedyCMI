@@ -37,6 +37,13 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                                       Delta = Delta,
                                       data = data,
                                       maxiter = maxiter)
+    } else if (toupper(dist) %in% c("LOGNORMAL", "LOGGAUSSIAN")) {
+      ## If log-normal, use Equation (10)
+      return_list = cmi_fp_eq10_single(imputation_formula = imputation_formula,
+                                       W = W,
+                                       Delta = Delta,
+                                       data = data,
+                                       maxiter = maxiter)
     }
   } else { # Multiple imputation
     if (!is.null(seed)) {
@@ -61,7 +68,14 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                                              Delta = Delta,
                                              data = b_data,
                                              maxiter = maxiter)
-        }
+      } else if (toupper(dist) %in% c("LOGNORMAL", "LOGGAUSSIAN")) {
+        ## If log-normal, use Equation (10)
+        return_list[[b]] = cmi_fp_eq10_single(imputation_formula = imputation_formula,
+                                              W = W,
+                                              Delta = Delta,
+                                              data = b_data,
+                                              maxiter = maxiter)
+      }
     }
   }
   return(return_list)

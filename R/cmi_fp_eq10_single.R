@@ -12,12 +12,11 @@
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
-#' @export
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq10 = function(imputation_formula, W, Delta, data, maxiter = 100) {
+cmi_fp_eq10_single = function(imputation_formula, W, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, W] ## start with imp = W
 
