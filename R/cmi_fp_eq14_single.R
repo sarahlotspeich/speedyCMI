@@ -65,7 +65,7 @@ cmi_fp_eq14_single = function(imputation_formula, dist, W, Delta, data, maxiter 
     sigma = fit$scale
 
     # Calculate mean life = integral from 0 to \infty of S(t|Z)
-    est_ml = mu[which(!uncens)] ## using formula for log-normal distribution
+    est_ml = exp(mu[which(!uncens)] + sigma ^ 2 / 2) ## using formula for log-normal distribution
 
     # Use adaptive quadrature to estimate
     ## integral from X = 0 to X = Wi
