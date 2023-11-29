@@ -29,7 +29,7 @@ cmi_fp_eq11_single = function(imputation_formula, W, Delta, data, maxiter = 100)
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors
 
-  # Transform paprameters to agree with paper's paramerization
+  # Transform parameters to agree with paper's parameterization
   alpha =  1 / fit$scale
   lambda = exp(lp)
 
@@ -39,16 +39,16 @@ cmi_fp_eq11_single = function(imputation_formula, W, Delta, data, maxiter = 100)
   # Use closed-form to compute the conditional means
   ## Save quantities for use in formula
   beta_shape1 = (alpha - 1) / alpha
-  beta_shape2 = (alpha + 1) / alpha
+  beta_shape2 = 1 / alpha
+  z = (1 + (data[which(!uncens), W] / lambda[which(!uncens)]) ^ alpha) ^ (- 1)
   B = beta(a = beta_shape1,
            b = beta_shape2)
-  cdf_at = 1 / (1 + (data[which(!uncens), W] / lambda[which(!uncens)]) ^ alpha)
-  beta_cdf = pbeta(q = cdf_at,
+  incB = B * pbeta(q = z,
                    shape1 = beta_shape1,
                    shape2 = beta_shape2,
                    lower.tail = TRUE) ## CDF of a beta
   data[which(!uncens), "imp"] = data[which(!uncens), W] +
-    lambda[which(!uncens)] ^ 2 * B * beta_cdf
+    lambda[which(!uncens)] / alpha (1 / z) * incB
 
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
