@@ -1,6 +1,9 @@
-# Statistically and computationally efficient conditional mean imputation for censored covariates
+Statistically and computationally efficient conditional mean imputation
+for censored covariates
+================
 
-This repository contains R code and simulation data to reproduce results from the [manuscript]() by Sarah C. Lotspeich and Ethan M. Alt (2023+). 
+This repository contains R code and simulation data to reproduce results
+from the [manuscript]() by Sarah C. Lotspeich and Ethan M. Alt (2023+).
 
 ## Package Installation
 
@@ -13,9 +16,20 @@ package and can be done in the following way.
 devtools::install_github(repo = "sarahlotspeich/speedyCMI")
 ```
 
-## Functions 
+``` r
+# Load the package
+library(speedyCMI)
+```
 
-The `speedyCMI` package contains separate functions to run conditional mean imputation (CMI) for censored covariates using the different formulas discussed in the corresponding paper. Using the following simulated dataset, 
+    ## Loading required package: survival
+
+## Functions
+
+The `speedyCMI` package contains separate functions to run conditional
+mean imputation (CMI) for censored covariates using the different
+formulas discussed in the corresponding paper. Using the following
+simulated dataset, we provide a brief overview of these functions and
+their use below.
 
 ``` r
 set.seed(918) # For reproducibility
@@ -29,56 +43,155 @@ c = rexp(n = n, rate = q) # Random censoring mechanism
 w = pmin(x, c) # Observed covariate value
 d = as.numeric(x <= c) # "Event" indicator
 dat = data.frame(x, z, w, y, d) # Construct data set
+head(dat) # Inspect data set
 ```
 
-we provide a brief overview of these functions and their use below. 
+    ##             x z           w         y d
+    ## 1 0.539817268 1 0.539817268 1.5004468 1
+    ## 2 0.712698933 1 0.712698933 2.7059625 1
+    ## 3 0.138822892 1 0.138822892 1.4781689 1
+    ## 4 3.174653770 0 2.664720071 2.9043014 0
+    ## 5 0.009582614 1 0.009582614 1.8282313 1
+    ## 6 0.095243557 0 0.095243557 0.9791424 1
 
-## Figures 
+The functions are first introduced for single imputation, before
+providing an example with multiple imputation.
 
-**Figure 1.** Average computing runtime per-replication for single imputation simulations (in seconds). The solid and dashed lines connect the mean and median per-replicate computing times, respectively.
+### 1. Parametric (Original Integral)
 
-![alt text](figures/fig1-average-computing-time-weibull-single-imp.png)
+``` r
+# Single parametric CMI using the original integral formula
+imp_dat = cmi_fp_original(imputation_formula = Surv(time = w, event = d) ~ z,
+                          dist = "weibull",
+                          W = "w",
+                          Delta = "d",
+                          data = dat)
 
-  - [Script (Run Simulations)](sims/single-imputation-sims.R)
-  - [Script (Make Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
-  - [Data (Simulation Results)](sims/single-imputation-sims.csv)
+## Inspect the return object (list)
+head(imp_dat$imputed_data) ### completed dataset with new column "imp" 
+```
 
-**Figure 2.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from each single imputation approach. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$. 
+    ##             x z           w         y d         imp
+    ## 1 0.539817268 1 0.539817268 1.5004468 1 0.539817268
+    ## 2 0.712698933 1 0.712698933 2.7059625 1 0.712698933
+    ## 3 0.138822892 1 0.138822892 1.4781689 1 0.138822892
+    ## 4 3.174653770 0 2.664720071 2.9043014 0 3.249785438
+    ## 5 0.009582614 1 0.009582614 1.8282313 1 0.009582614
+    ## 6 0.095243557 0 0.095243557 0.9791424 1 0.095243557
 
-![alt text](figures/fig2-betas-weibull-single-imp.png)
+``` r
+imp_dat$code ### logical indicator for whether or not imputation model converged
+```
 
-  - [Script (Run Simulations)](sims/single-imputation-sims.R)
-  - [Script (Make Figure)](figures/fig2-betas-weibull-single-imp.R)
-  - [Data (Simulation Results)](sims/single-imputation-sims.csv)
+    ## [1] TRUE
 
-**Figure 3.** Average computing runtime per-replication for imputation simulations (in seconds) with an increasing number of imputations $B$. The solid and dashed lines connect the mean and median per-replicate computing times, respectively.
+``` r
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, data = imp_dat$imputed_data)
+```
 
-![alt text](figures/fig3-average-computing-time-weibull-multiple-imp.png)
+    ## 
+    ## Call:
+    ## lm(formula = y ~ imp + z, data = imp_dat$imputed_data)
+    ## 
+    ## Coefficients:
+    ## (Intercept)          imp            z  
+    ##      1.0720       0.3867       0.2462
 
-  - [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-  - [Script (Make Figure)](figures/fig3-average-computing-time-weibull-multiple-imp.R)
-  - [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+### 2. Parametric (Stabilized Integral Without Mean)
 
-**Figure 4.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from each imputation approach with an increasing number of imputations $B$. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$.
+### 3. Parametric (Stabilized Integral With Mean)
 
-![alt text](figures/fig4-betas-weibull-multiple-imp.png)
+### 4. Parametric (Analytical Solution)
 
-  - [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-  - [Script (Make Figure)](figures/fig4-betas-weibull-multiple-imp.R)
-  - [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+### Multiple Imputation
 
-**Figure S1.** Total computing runtime across 1000 replicates for single imputation simulations (in seconds). 
+## Figures
 
-![alt text](figures/figS1-total-computing-time-weibull-single-imp.png)
+**Figure 1.** Average computing runtime per-replication for single
+imputation simulations (in seconds). The solid and dashed lines connect
+the mean and median per-replicate computing times, respectively.
 
-  - [Script (Run Simulations)](sims/single-imputation-sims.R)
-  - [Script (Make Figure)](figures/figS1-total-computing-time-weibull-single-imp.R)
-  - [Data (Simulation Results)](sims/single-imputation-sims.csv)
+<figure>
+<img src="figures/fig1-average-computing-time-weibull-single-imp.png"
+alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
 
-**Figure S2.** Total computing runtime across 1000 replicates for imputation simulations (in seconds) with an increasing number of imputations $B$. 
+- [Script (Run Simulations)](sims/single-imputation-sims.R)
+- [Script (Make
+  Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
+- [Data (Simulation Results)](sims/single-imputation-sims.csv)
 
-![alt text](figures/figS2-total-computing-time-weibull-multiple-imp.png)
+**Figure 2.** Estimates of $\beta_1$, the parameter on the censored
+covariate $X$ in the linear regression analysis model, resulting from
+each single imputation approach. The horizontal dashed line denotes the
+true value of $\beta_1 = 0.5$.
 
-  - [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-  - [Script (Make Figure)](figures/figS2-total-computing-time-weibull-multiple-imp.R)
-  - [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+<figure>
+<img src="figures/fig2-betas-weibull-single-imp.png" alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+
+- [Script (Run Simulations)](sims/single-imputation-sims.R)
+- [Script (Make Figure)](figures/fig2-betas-weibull-single-imp.R)
+- [Data (Simulation Results)](sims/single-imputation-sims.csv)
+
+**Figure 3.** Average computing runtime per-replication for imputation
+simulations (in seconds) with an increasing number of imputations $B$.
+The solid and dashed lines connect the mean and median per-replicate
+computing times, respectively.
+
+<figure>
+<img src="figures/fig3-average-computing-time-weibull-multiple-imp.png"
+alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make
+  Figure)](figures/fig3-average-computing-time-weibull-multiple-imp.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Figure 4.** Estimates of $\beta_1$, the parameter on the censored
+covariate $X$ in the linear regression analysis model, resulting from
+each imputation approach with an increasing number of imputations $B$.
+The horizontal dashed line denotes the true value of $\beta_1 = 0.5$.
+
+<figure>
+<img src="figures/fig4-betas-weibull-multiple-imp.png" alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make Figure)](figures/fig4-betas-weibull-multiple-imp.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Figure S1.** Total computing runtime across 1000 replicates for single
+imputation simulations (in seconds).
+
+<figure>
+<img src="figures/figS1-total-computing-time-weibull-single-imp.png"
+alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+
+- [Script (Run Simulations)](sims/single-imputation-sims.R)
+- [Script (Make
+  Figure)](figures/figS1-total-computing-time-weibull-single-imp.R)
+- [Data (Simulation Results)](sims/single-imputation-sims.csv)
+
+**Figure S2.** Total computing runtime across 1000 replicates for
+imputation simulations (in seconds) with an increasing number of
+imputations $B$.
+
+<figure>
+<img src="figures/figS2-total-computing-time-weibull-multiple-imp.png"
+alt="alt text" />
+<figcaption aria-hidden="true">alt text</figcaption>
+</figure>
+
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make
+  Figure)](figures/figS2-total-computing-time-weibull-multiple-imp.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
