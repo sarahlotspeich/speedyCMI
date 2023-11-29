@@ -48,7 +48,7 @@ cmi_fp_eq11_single = function(imputation_formula, W, Delta, data, maxiter = 100)
                    shape2 = beta_shape2,
                    lower.tail = TRUE) ## CDF of a beta
   data[which(!uncens), "imp"] = data[which(!uncens), W] +
-    lambda[which(!uncens)] / alpha (1 / z) * incB
+    lambda[which(!uncens)] / alpha * (1 / z) * incB
 
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
