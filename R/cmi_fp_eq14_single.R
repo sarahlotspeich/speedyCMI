@@ -102,8 +102,7 @@ cmi_fp_eq14_single = function(imputation_formula, dist, W, Delta, data, maxiter 
         FUN = function(i) {
           integrate(f = function(x) 1 / (1 + (x / lambda[i]) ^ alpha),
                     lower = 0,
-                    upper = data[i, W],
-                    lower.tail = FALSE)$value
+                    upper = data[i, W])$value
         }
       )
 
