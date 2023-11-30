@@ -7,7 +7,7 @@ from the [manuscript]() by Sarah C. Lotspeich and Ethan M. Alt (2023+).
 
 ## Package Installation
 
-Installation of the `speedyCMI` from GitHub requires the
+Installation of the `speedyCMI` package from GitHub requires the
 [`devtools`](https://www.r-project.org/nosvn/pandoc/devtools.html)
 package and can be done in the following way.
 
