@@ -15,13 +15,15 @@ Installation of the `speedyCMI` from GitHub requires the
 [`devtools`](https://www.r-project.org/nosvn/pandoc/devtools.html)
 package and can be done in the following way.
 
-``` r
+```{r, eval = FALSE}
 # Install the package
 devtools::install_github(repo = "sarahlotspeich/speedyCMI", 
                          ref = "main")
 ```
 
-```{r}
+The package can then be loaded in the usual way. 
+
+```{r, warning = FALSE, message = FALSE}
 # Load the package
 library(speedyCMI)
 ```
@@ -47,7 +49,7 @@ head(dat) # Inspect data set
 
 The functions are first introduced for single imputation, before providing an example with multiple imputation. 
 
-### 1. Parametric (Original Integral)
+### 1. Parametric CMI (Original Integral)
 
 ```{r}
 # Single parametric CMI using the original integral formula
@@ -62,16 +64,79 @@ head(imp_dat$imputed_data) ### completed dataset with new column "imp"
 imp_dat$code ### logical indicator for whether or not imputation model converged
 
 ## Fit the analysis model to singly imputed data
-lm(y ~ imp + z, data = imp_dat$imputed_data)
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
 ```
 
-### 2. Parametric (Stabilized Integral Without Mean)
+### 2. Parametric CMI (Stabilized Integral Without Mean)
 
-### 3. Parametric (Stabilized Integral With Mean)
+```{r}
+# Single parametric CMI using the stabilized integral formula without mean
+imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat, 
+                            with_mean = FALSE)
 
-### 4. Parametric (Analytical Solution)
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
 
-### Multiple Imputation
+### 3. Parametric CMI (Stabilized Integral With Mean)
+
+```{r}
+# Single parametric CMI using the stabilized integral formula with mean
+imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat, 
+                            with_mean = TRUE)
+
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
+
+### 4. Parametric CMI (Analytical Solution)
+
+```{r}
+# Single parametric CMI using the analytical solution
+imp_dat = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat)
+
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
+
+### 6. Parametric CMI (Multiple Imputation)
+
+Using the analytical solution as our example, the following code snippet outlines how the use of the `cmi_fp_analytical()` function can be modified for multiple imputation via bootstrap resampling. Notice that the first modification is in supplying the desired number of imputations to the `boots` argument. 
+
+```{r}
+# Multiple parametric CMI using the analytical solution
+B = 20 ## Desired number of imputations 
+mult_imp = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z, 
+                             dist = "weibull",
+                             W = "w", 
+                             Delta = "d", 
+                             data = dat, 
+                             boots = B) 
+
+## Inspect the return object (list of lists)
+head(mult_imp[[1]]$imputed_data) ### completed dataset with new column "imp" from imputation 1
+mult_imp[[1]]$code ### logical indicator for whether or not imputation model converged from imputation 1
+
+## Fit the analysis model to multiplt imputed data
+cmi_fp_pool_fit(formula = y ~ imp + z, 
+                imp_data = mult_imp)
+```
 
 ## Figures 
 

@@ -13,15 +13,16 @@ package and can be done in the following way.
 
 ``` r
 # Install the package
-devtools::install_github(repo = "sarahlotspeich/speedyCMI")
+devtools::install_github(repo = "sarahlotspeich/speedyCMI", 
+                         ref = "main")
 ```
+
+The package can then be loaded in the usual way.
 
 ``` r
 # Load the package
 library(speedyCMI)
 ```
-
-    ## Loading required package: survival
 
 ## Functions
 
@@ -57,7 +58,7 @@ head(dat) # Inspect data set
 The functions are first introduced for single imputation, before
 providing an example with multiple imputation.
 
-### 1. Parametric (Original Integral)
+### 1. Parametric CMI (Original Integral)
 
 ``` r
 # Single parametric CMI using the original integral formula
@@ -87,7 +88,8 @@ imp_dat$code ### logical indicator for whether or not imputation model converged
 
 ``` r
 ## Fit the analysis model to singly imputed data
-lm(y ~ imp + z, data = imp_dat$imputed_data)
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
 ```
 
     ## 
@@ -98,13 +100,123 @@ lm(y ~ imp + z, data = imp_dat$imputed_data)
     ## (Intercept)          imp            z  
     ##      1.0720       0.3867       0.2462
 
-### 2. Parametric (Stabilized Integral Without Mean)
+### 2. Parametric CMI (Stabilized Integral Without Mean)
 
-### 3. Parametric (Stabilized Integral With Mean)
+``` r
+# Single parametric CMI using the stabilized integral formula without mean
+imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat, 
+                            with_mean = FALSE)
 
-### 4. Parametric (Analytical Solution)
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
 
-### Multiple Imputation
+    ## 
+    ## Call:
+    ## lm(formula = y ~ imp + z, data = imp_dat$imputed_data)
+    ## 
+    ## Coefficients:
+    ## (Intercept)          imp            z  
+    ##      1.0720       0.3867       0.2462
+
+### 3. Parametric CMI (Stabilized Integral With Mean)
+
+``` r
+# Single parametric CMI using the stabilized integral formula with mean
+imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat, 
+                            with_mean = TRUE)
+
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = y ~ imp + z, data = imp_dat$imputed_data)
+    ## 
+    ## Coefficients:
+    ## (Intercept)          imp            z  
+    ##      1.0720       0.3867       0.2462
+
+### 4. Parametric CMI (Analytical Solution)
+
+``` r
+# Single parametric CMI using the analytical solution
+imp_dat = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z,
+                            dist = "weibull",
+                            W = "w",
+                            Delta = "d",
+                            data = dat)
+
+## Fit the analysis model to singly imputed data
+lm(y ~ imp + z, 
+   data = imp_dat$imputed_data)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = y ~ imp + z, data = imp_dat$imputed_data)
+    ## 
+    ## Coefficients:
+    ## (Intercept)          imp            z  
+    ##      1.0720       0.3867       0.2462
+
+### 6. Parametric CMI (Multiple Imputation)
+
+Using the analytical solution as our example, the following code snippet
+outlines how the use of the `cmi_fp_analytical()` function can be
+modified for multiple imputation via bootstrap resampling. Notice that
+the first modification is in supplying the desired number of imputations
+to the `boots` argument.
+
+``` r
+# Multiple parametric CMI using the analytical solution
+B = 20 ## Desired number of imputations 
+mult_imp = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z, 
+                             dist = "weibull",
+                             W = "w", 
+                             Delta = "d", 
+                             data = dat, 
+                             boots = B) 
+
+## Inspect the return object (list of lists)
+head(mult_imp[[1]]$imputed_data) ### completed dataset with new column "imp" from imputation 1
+```
+
+    ##             x z         w          y d       imp
+    ## 605 0.3963907 0 0.3963907 0.06337772 1 0.3963907
+    ## 670 0.2185118 0 0.2185118 0.11257288 1 0.2185118
+    ## 592 1.1698449 1 0.1521263 0.61717024 0 0.7488695
+    ## 10  0.4303014 1 0.4303014 1.35695814 1 0.4303014
+    ## 626 1.6291951 1 1.6291951 1.77973530 1 1.6291951
+    ## 641 0.1534294 0 0.1534294 0.87258973 1 0.1534294
+
+``` r
+mult_imp[[1]]$code ### logical indicator for whether or not imputation model converged from imputation 1
+```
+
+    ## [1] TRUE
+
+``` r
+## Fit the analysis model to multiplt imputed data
+cmi_fp_pool_fit(formula = y ~ imp + z, 
+                imp_data = mult_imp)
+```
+
+    ##              Estimate Standard.Error
+    ## (Intercept) 1.0835455      0.2254262
+    ## imp         0.3923314      0.2706760
+    ## z           0.2194103      0.3151813
 
 ## Figures
 
