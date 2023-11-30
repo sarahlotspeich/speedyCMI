@@ -14,9 +14,7 @@ cmi_fp_pool_fit(formula, family = gaussian, imp_data)
 \item{imp_data}{A list of lists returned from one of the following functions: \code{cmi_fp_original()}, \code{cmi_fp_stabilized()}, or \code{cmi_fp_analytical()}.}
 }
 \value{
-A list (or, in the case of multiple imputation, a list of lists) containing:
-\item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
-\item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+A dataframe of coefficient and standard error estimates
 }
 \description{
 Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.

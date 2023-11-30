@@ -6,9 +6,7 @@
 #' @param family (optional) analysis model family, to be supplied to \code{glm()} to fit the model. Default is \code{family = gaussian}, but see \code{?family} for more options and details.
 #' @param imp_data A list of lists returned from one of the following functions: \code{cmi_fp_original()}, \code{cmi_fp_stabilized()}, or \code{cmi_fp_analytical()}.
 #'
-#' @return A list (or, in the case of multiple imputation, a list of lists) containing:
-#' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
-#' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+#' @return A dataframe of coefficient and standard error estimates
 #'
 #' @export
 
