@@ -11,7 +11,7 @@
 #' @param boots (optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.
 #' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{NULL}, which does not reset \code{seed}.
 #'
-#' @return A list (or, in the case of multiple imputation, a list of lists) containing:
+#' @return A list (or, in the case of multiple imputation, a list of \code{boots} lists) containing:
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #'
@@ -24,33 +24,40 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
   # Single imputation
   if (boots == 0) {
     if (toupper(dist) == "WEIBULL") {
-      ## If Weibull, use Equation (5)
-      return_list = cmi_fp_eq5_single(imputation_formula = imputation_formula,
-                                      W = W,
-                                      Delta = Delta,
-                                      data = data,
-                                      maxiter = maxiter)
+      ## If Weibull, use equation at the end of Section 2.4.1
+      return_list = cmi_fp_weibull_single(imputation_formula = imputation_formula,
+                                          W = W,
+                                          Delta = Delta,
+                                          data = data,
+                                          maxiter = maxiter)
     } else if (toupper(dist) == "EXPONENTIAL") {
-      ## If exponential, use Equation (6)
-      return_list = cmi_fp_eq6_single(imputation_formula = imputation_formula,
-                                      W = W,
-                                      Delta = Delta,
-                                      data = data,
-                                      maxiter = maxiter)
+      ## If exponential, use equation from Section 2.4.2
+      return_list = cmi_fp_expo_single(imputation_formula = imputation_formula,
+                                       W = W,
+                                       Delta = Delta,
+                                       data = data,
+                                       maxiter = maxiter)
     } else if (toupper(dist) %in% c("LOGNORMAL", "LOGGAUSSIAN")) {
-      ## If log-normal, use Equation (10)
-      return_list = cmi_fp_eq10_single(imputation_formula = imputation_formula,
-                                       W = W,
-                                       Delta = Delta,
-                                       data = data,
-                                       maxiter = maxiter)
+      ## If log-normal, use equation at the end of Section 2.4.3
+      return_list = cmi_fp_lognorm_single(imputation_formula = imputation_formula,
+                                          W = W,
+                                          Delta = Delta,
+                                          data = data,
+                                          maxiter = maxiter)
     } else if (toupper(dist) == "LOGLOGISTIC") {
-      ## If log-logistic, use Equation (11)
-      return_list = cmi_fp_eq11_single(imputation_formula = imputation_formula,
-                                       W = W,
-                                       Delta = Delta,
-                                       data = data,
-                                       maxiter = maxiter)
+      ## If log-logistic, use equation at the end of Section 2.4.4
+      return_list = cmi_fp_loglogistic_single(imputation_formula = imputation_formula,
+                                              W = W,
+                                              Delta = Delta,
+                                              data = data,
+                                              maxiter = maxiter)
+    } else if (toupper(dist) == "PWE") {
+      ## If piecewise exponential, use Equation (11)
+      # return_list = cmi_fp_loglogistic_single(imputation_formula = imputation_formula,
+      #                                  W = W,
+      #                                  Delta = Delta,
+      #                                  data = data,
+      #                                  maxiter = maxiter)
     }
   } else { # Multiple imputation
     if (!is.null(seed)) {
@@ -63,32 +70,33 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                       replace = TRUE)
       b_data = data[b_rows, ]
       if (toupper(dist) == "WEIBULL") {
-        return_list[[b]] = cmi_fp_eq5_single(imputation_formula = imputation_formula,
-                                             W = W,
-                                             Delta = Delta,
-                                             data = b_data,
-                                             maxiter = maxiter)
-      } else if (toupper(dist) == "EXPONENTIAL") {
-        ## If exponential, use Equation (6)
-        return_list[[b]] = cmi_fp_eq6_single(imputation_formula = imputation_formula,
-                                             W = W,
-                                             Delta = Delta,
-                                             data = b_data,
-                                             maxiter = maxiter)
+        ## If Weibull, use equation at the end of Section 2.4.1
+        return_list[[b]] = cmi_fp_weibull_single(imputation_formula = imputation_formula,
+                                                 W = W,
+                                                 Delta = Delta,
+                                                 data = b_data,
+                                                 maxiter = maxiter)
+        } else if (toupper(dist) == "EXPONENTIAL") {
+        ## If exponential, use equation from Section 2.4.2
+        return_list[[b]] = cmi_fp_expo_single(imputation_formula = imputation_formula,
+                                              W = W,
+                                              Delta = Delta,
+                                              data = b_data,
+                                              maxiter = maxiter)
       } else if (toupper(dist) %in% c("LOGNORMAL", "LOGGAUSSIAN")) {
-        ## If log-normal, use Equation (10)
-        return_list[[b]] = cmi_fp_eq10_single(imputation_formula = imputation_formula,
-                                              W = W,
-                                              Delta = Delta,
-                                              data = b_data,
-                                              maxiter = maxiter)
+        ## If log-normal, use equation at the end of Section 2.4.3
+        return_list[[b]] = cmi_fp_lognorm_single(imputation_formula = imputation_formula,
+                                                 W = W,
+                                                 Delta = Delta,
+                                                 data = b_data,
+                                                 maxiter = maxiter)
       } else if (toupper(dist) == "LOGLOGISTIC") {
-        ## If log-logistic, use Equation (11)
-        return_list[[b]] = cmi_fp_eq11_single(imputation_formula = imputation_formula,
-                                              W = W,
-                                              Delta = Delta,
-                                              data = b_data,
-                                              maxiter = maxiter)
+        ## If log-logistic, use equation at the end of Section 2.4.4
+        return_list[[b]] = cmi_fp_loglogistic_single(imputation_formula = imputation_formula,
+                                                     W = W,
+                                                     Delta = Delta,
+                                                     data = b_data,
+                                                     maxiter = maxiter)
       }
     }
   }
