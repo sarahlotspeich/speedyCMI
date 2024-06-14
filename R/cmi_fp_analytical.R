@@ -7,6 +7,8 @@
 #' @param W character, column name for observed values of the censored covariate.
 #' @param Delta character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
+#' @param nintervals (only if \code{dist = "PWE"}) integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.
+#' @param breaks (only if \code{dist = "PWE"}) vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{max_iter = 100}.
 #' @param boots (optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.
 #' @param seed (optional) numeric, for multiple imputation set the random seed for the bootstrapping with \code{seed}. Default is \code{NULL}, which does not reset \code{seed}.
@@ -20,7 +22,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter = 100, boots = 0, seed = NULL) {
+cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, nintervals = NULL, breaks = NULL, maxiter = 100, boots = 0, seed = NULL) {
   # Single imputation
   if (boots == 0) {
     if (toupper(dist) == "WEIBULL") {
@@ -52,12 +54,14 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                                               data = data,
                                               maxiter = maxiter)
     } else if (toupper(dist) == "PWE") {
-      ## If piecewise exponential, use Equation (11)
-      # return_list = cmi_fp_loglogistic_single(imputation_formula = imputation_formula,
-      #                                  W = W,
-      #                                  Delta = Delta,
-      #                                  data = data,
-      #                                  maxiter = maxiter)
+      ## If piecewise exponential, use equation at the end of Section 2.4.5
+      return_list = cmi_fp_pwe_single(imputation_formula = imputation_formula,
+                                      W = NULL,
+                                      Delta = NULL,
+                                      data = data,
+                                      maxiter = maxiter,
+                                      nintervals = nintervals,
+                                      breaks = breaks)
     }
   } else { # Multiple imputation
     if (!is.null(seed)) {
@@ -97,6 +101,15 @@ cmi_fp_analytical = function(imputation_formula, dist, W, Delta, data, maxiter =
                                                      Delta = Delta,
                                                      data = b_data,
                                                      maxiter = maxiter)
+      } else if (toupper(dist) == "PWE") {
+        ## If piecewise exponential, use equation at the end of Section 2.4.5
+        return_list[[b]] = cmi_fp_pwe_single(imputation_formula = imputation_formula,
+                                             W = NULL,
+                                             Delta = NULL,
+                                             data = b_data,
+                                             maxiter = maxiter,
+                                             nintervals = nintervals,
+                                             breaks = breaks)
       }
     }
   }

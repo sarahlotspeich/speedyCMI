@@ -10,6 +10,8 @@ cmi_fp_analytical(
   W,
   Delta,
   data,
+  nintervals = NULL,
+  breaks = NULL,
   maxiter = 100,
   boots = 0,
   seed = NULL
@@ -25,6 +27,10 @@ cmi_fp_analytical(
 \item{Delta}{character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.}
 
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
+
+\item{nintervals}{(only if \code{dist = "PWE"}) integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.}
+
+\item{breaks}{(only if \code{dist = "PWE"}) vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.}
 
 \item{boots}{(optional) numeric, for multiple imputation supply the desired number of imputations (obtained via bootstrapping) to \code{boots}. Default is \code{0}, which is single imputation.}
 
