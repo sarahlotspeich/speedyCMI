@@ -3,8 +3,6 @@
 #' Single, fully parametric conditional mean imputation for a right-censored covariate using a piecewise exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (11) of the manuscript.
 #'
 #' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
-#' @param W character, column name for observed values of the censored covariate.
-#' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #' @param nintervals integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.
@@ -17,8 +15,9 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 #' @importFrom survival survSplit
+#' @importFrom formula.tools terms
 
-cmi_fp_pwe_single = function(imputation_formula, W, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
+cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
   ## Checks
   if (is.null(nintervals)) {
     if (is.null(breaks)) {
@@ -32,8 +31,8 @@ cmi_fp_pwe_single = function(imputation_formula, W, data, maxiter = 100, ninterv
   Delta = data[[setup$Deltaname]]
 
   ## Get terms from formula
-  tt = formula.tools::terms(imputation_formula,
-                            data = data)
+  tt = terms(imputation_formula,
+             data = data)
 
   ## Compute breaks based on nintervals quantiles (if specified)
   if (!(is.null(nintervals))) {
@@ -83,7 +82,7 @@ cmi_fp_pwe_single = function(imputation_formula, W, data, maxiter = 100, ninterv
   idcen = (1:nrow(data))[cenindx]
 
   ## Filter pdata so that only censored individuals are included
-  pdata = pdata %>% filter(id %in% idcen)
+  pdata = pdata[which(pdata$id %in% idcen), ]
   data2 = data
   data2$id = 1:nrow(data2)
   data2 = data2[which(data2$id %in% idcen), ]

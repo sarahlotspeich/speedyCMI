@@ -18,7 +18,7 @@ eq15_integrand = function(t, Wi, lpi, dist, fit, use_cumulative_hazard) {
 }
 
 cmi_pwe_setup = function(imputation_formula, data) {
-  Terms = formula.tools::terms(imputation_formula, data = data)
+  Terms = terms(imputation_formula, data = data)
   if ( attr(Terms, 'response') == 0 )
     stop('formula must have a Surv response')
   mf = model.frame(imputation_formula, data = data)
