@@ -16,7 +16,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq5_single = function(imputation_formula, W, Delta, data, maxiter = 100) {
+cmi_fp_weibull_single = function(imputation_formula, W, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, W] ## start with imp = W
 
