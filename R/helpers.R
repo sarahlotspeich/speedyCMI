@@ -16,3 +16,19 @@ eq15_integrand = function(t, Wi, lpi, dist, fit, use_cumulative_hazard) {
     return(num / denom)
   }
 }
+
+cmi_pwe_setup = function(imputation_formula, data) {
+  Terms = formula.tools::terms(imputation_formula, data = data)
+  if ( attr(Terms, 'response') == 0 )
+    stop('formula must have a Surv response')
+  mf = model.frame(imputation_formula, data = data)
+  Y  = model.extract(mf, 'response')
+  if (!inherits(Y, "Surv"))
+    stop("Response must be a survival object")
+  ## Extract names of variables
+  Wname = all.vars(imputation_formula)[1]
+  Deltaname = all.vars(imputation_formula)[2]   ## assumes right-censoring
+  ## Return list
+  list('Wname' = Wname,
+       'Deltaname' = Deltaname)
+}
