@@ -93,6 +93,9 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
   if ( '(Intercept)' %in% colnames(X) ) {
     intindx = which(colnames(X) == '(Intercept)')
     X = X[, -intindx]
+    if (is.null(ncol(X))) {
+      X = data.matrix(frame = X)
+     }
   }
   ## Extract coefficients (ignoring intercept terms)
   beta = coef(fit)
