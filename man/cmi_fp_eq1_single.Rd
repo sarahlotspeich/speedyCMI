@@ -4,16 +4,12 @@
 \alias{cmi_fp_eq1_single}
 \title{Single, fully parametric imputation for a right-censored covariate with conditional means following Equation (1)}
 \usage{
-cmi_fp_eq1_single(imputation_formula, dist, W, Delta, data, maxiter = 100)
+cmi_fp_eq1_single(imputation_formula, dist, data, maxiter = 100)
 }
 \arguments{
 \item{imputation_formula}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
 
 \item{dist}{imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.}
-
-\item{W}{character, column name for observed values of the censored covariate}
-
-\item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
 
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
@@ -23,6 +19,7 @@ cmi_fp_eq1_single(imputation_formula, dist, W, Delta, data, maxiter = 100)
 A list containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+\item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{W} to \code{Inf} to compute conditional means, as in Equation (1) of the manuscript.
