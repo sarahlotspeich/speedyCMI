@@ -6,7 +6,6 @@
 \usage{
 cmi_fp_pwe_single(
   imputation_formula,
-  W,
   data,
   maxiter = 100,
   nintervals = NULL,
@@ -16,21 +15,18 @@ cmi_fp_pwe_single(
 \arguments{
 \item{imputation_formula}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
 
-\item{W}{character, column name for observed values of the censored covariate.}
-
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
 
 \item{nintervals}{integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.}
 
 \item{breaks}{vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.}
 
-\item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
-
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
 \value{
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+\item{aic}{Akaike information criterion (AIC) from the imputation model fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using a piecewise exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (11) of the manuscript.

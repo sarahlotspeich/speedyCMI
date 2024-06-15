@@ -10,12 +10,12 @@
 #' @return
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+#' \item{aic}{Akaike information criterion (AIC) from the imputation model fit.}
 #'
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 #' @importFrom survival survSplit
-#' @importFrom formula.tools terms
 
 cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
   ## Checks
@@ -59,7 +59,9 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
   ## compute time-at-risk
   pdata$risktime = pdata[[setup$Wname]] - pdata[['start']]
   ## Obtain breaks assuming last cutpoint = infinity; create names for factor variable
-  breaks[length(breaks)] = Inf
+  if (breaks[length(breaks)] != Inf) {
+    breaks = append(breaks, Inf) ### Append infinity to the end
+  }
   intvlnames = paste0('[', breaks[-length(breaks)], ', ', breaks[-1],')')
   pdata$interval = factor(pdata$interval,
                           labels = intvlnames)
@@ -138,6 +140,7 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
 
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
-                     code = !any(is.na(data$imp)))
+                     code = !any(is.na(data$imp)),
+                     aic = fit$aic)
   return(return_list)
 }
