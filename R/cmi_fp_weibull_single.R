@@ -27,10 +27,6 @@ cmi_fp_weibull_single = function(imputation_model, W, Delta, data, maxiter = 100
                 dist = "weibull",
                 maxiter = maxiter)
 
-  ## Compute AIC for the imputation model
-  k = length(fit$coefficients) + 1
-  aic = 2 * k - (2 * fit$loglik[1])
-
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors
 
@@ -60,6 +56,6 @@ cmi_fp_weibull_single = function(imputation_model, W, Delta, data, maxiter = 100
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
                      code = !any(is.na(data$imp)),
-                     aic = aic)
+                     aic = AIC(object = fit))
   return(return_list)
 }
