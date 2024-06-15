@@ -16,7 +16,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq1_single = function(imputation_model, dist, data, maxiter = 100) {
+cmi_fp_original_single = function(imputation_model, dist, data, maxiter = 100) {
   # Extract variable names from imputation_model
   W = all.vars(imputation_model)[1] ## censored covariate
   Delta = all.vars(imputation_model)[2] ## corresponding event indicator
