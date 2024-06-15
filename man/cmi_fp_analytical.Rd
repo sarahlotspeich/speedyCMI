@@ -5,10 +5,8 @@
 \title{Fully parametric conditional mean imputation for a right-censored covariate with conditional means using the analytical solution}
 \usage{
 cmi_fp_analytical(
-  imputation_formula,
+  imputation_model,
   dist,
-  W,
-  Delta,
   data,
   nintervals = NULL,
   breaks = NULL,
@@ -18,15 +16,11 @@ cmi_fp_analytical(
 )
 }
 \arguments{
-\item{imputation_formula}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
+\item{imputation_model}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
 
 \item{dist}{imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.}
 
-\item{W}{character, column name for observed values of the censored covariate.}
-
-\item{Delta}{character, column name for censoring indicators. Note that values of zero in \code{Delta} are interpreted as censored observations.}
-
-\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
+\item{data}{dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.}
 
 \item{nintervals}{(only if \code{dist = "PWE"}) integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.}
 
@@ -42,6 +36,7 @@ cmi_fp_analytical(
 A list (or, in the case of multiple imputation, a list of \code{boots} lists) containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+\item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
 }
 \description{
 Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.
