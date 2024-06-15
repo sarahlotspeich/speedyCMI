@@ -4,22 +4,23 @@
 \alias{cmi_fp_weibull_single}
 \title{Single, fully parametric conditional mean imputation for a right-censored covariate (Weibull distribution) with conditional means following Equation (6)}
 \usage{
-cmi_fp_weibull_single(imputation_formula, W, Delta, data, maxiter = 100)
+cmi_fp_weibull_single(imputation_model, W, Delta, data, maxiter = 100)
 }
 \arguments{
-\item{imputation_formula}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
+\item{imputation_model}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
 
 \item{W}{character, column name for observed values of the censored covariate}
 
 \item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
 
-\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
+\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.}
 
 \item{max_iter}{(optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.}
 }
 \value{
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+\item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using a Weibull model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.

@@ -2,29 +2,34 @@
 #'
 #' Single, fully parametric conditional mean imputation for a right-censored covariate using an exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
 #'
-#' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
+#' @param imputation_model imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
 #' @param W character, column name for observed values of the censored covariate
 #' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
-#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
+#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #'
 #' @return
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+#' \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
 #'
 #' @importFrom survival survreg
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_expo_single = function(imputation_formula, W, Delta, data, maxiter = 100) {
+cmi_fp_expo_single = function(imputation_model, W, Delta, data, maxiter = 100) {
   # Initialize imputed values
   data$imp = data[, W] ## start with imp = W
 
   # Fit AFT imputation model for X ~ Z
-  fit = survreg(formula = imputation_formula,
+  fit = survreg(formula = imputation_model,
                 data = data,
                 dist = "exponential",
                 maxiter = maxiter)
+
+  ## Compute AIC for the imputation model
+  k = length(fit$coefficients)
+  aic = 2 * k - (2 * fit$loglik[1])
 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors
@@ -44,6 +49,7 @@ cmi_fp_expo_single = function(imputation_formula, W, Delta, data, maxiter = 100)
 
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
-                     code = !any(is.na(data$imp)))
+                     code = !any(is.na(data$imp)),
+                     aic = aic)
   return(return_list)
 }
