@@ -51,11 +51,11 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
   }
   ## Create pseudo-data for Poisson likelihood;
   pdata = survSplit(imputation_formula,
-                     data = data,
-                     cut = breaks,
-                     episode = "interval",
-                     start = "start",
-                     id = 'id')
+                    data = data,
+                    cut = breaks,
+                    episode = "interval",
+                    start = "start",
+                    id = 'id')
   ## compute time-at-risk
   pdata$risktime = pdata[[setup$Wname]] - pdata[['start']]
   ## Obtain breaks assuming last cutpoint = infinity; create names for factor variable
