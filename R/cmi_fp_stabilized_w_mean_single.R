@@ -16,7 +16,7 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_eq14_single = function(imputation_model, dist, data, maxiter = 100) {
+cmi_fp_stabilized_w_mean_single = function(imputation_model, dist, data, maxiter = 100) {
   # Fit AFT imputation model for X ~ Z
   fit = survreg(formula = imputation_model,
                 data = data,

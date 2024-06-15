@@ -2,11 +2,9 @@
 #'
 #' Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then computes conditional means using the stabilized integral.
 #'
-#' @param imputation_formula imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
+#' @param imputation_model imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
 #' @param dist imputation model distribution passed through to \code{survreg}. Options of \code{dist =} \code{"exponential"}, \code{"loglogistic"}, \code{"lognormal"}, and \code{"weibull"} currently accepted.
-#' @param W character, column name for observed values of the censored covariate
-#' @param Delta character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.
-#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
+#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.
 #' @param with_mean logical, if \code{TRUE} the stabilized integral with the mean is used. Default is \code{FALSE}.
 #' @param use_cumulative_hazard (optional) logical, if \code{use_cumulative_hazard = TRUE} and \code{with_mean = FALSE} the survival function is transformed to the cumulative hazard before integration. Default is \code{TRUE}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
@@ -22,15 +20,13 @@
 #' @importFrom survival Surv
 #' @importFrom survival psurvreg
 
-cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean = FALSE, use_cumulative_hazard = TRUE, maxiter = 100, boots = 0, seed = NULL) {
+cmi_fp_stabilized = function(imputation_model, dist, data, with_mean = FALSE, use_cumulative_hazard = TRUE, maxiter = 100, boots = 0, seed = NULL) {
   if (with_mean) {
     if (boots == 0) {
-      return_list = cmi_fp_eq14_single(imputation_formula = imputation_formula,
-                                       dist = dist,
-                                       W = W,
-                                       Delta = Delta,
-                                       data = data,
-                                       maxiter = maxiter)
+      return_list = cmi_fp_stabilized_w_mean_single(imputation_model = imputation_model,
+                                                    dist = dist,
+                                                    data = data,
+                                                    maxiter = maxiter)
     } else {
       if (!is.null(seed)) {
         set.seed(seed)
@@ -38,23 +34,19 @@ cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean
       return_list = list()
       for (b in 1:boots) {
         re_data = data[sample(x = 1:nrow(data), size = nrow(data), replace = TRUE), ]
-        return_list[[b]] = cmi_fp_eq14_single(imputation_formula = imputation_formula,
-                                              dist = dist,
-                                              W = W,
-                                              Delta = Delta,
-                                              data = re_data,
-                                              maxiter = maxiter)
+        return_list[[b]] = cmi_fp_stabilized_w_mean_single(imputation_model = imputation_model,
+                                                           dist = dist,
+                                                           data = re_data,
+                                                           maxiter = maxiter)
       }
     }
   } else if (!with_mean) {
     if (boots == 0) {
-      return_list = cmi_fp_eq15_single(imputation_formula = imputation_formula,
-                                       dist = dist,
-                                       W = W,
-                                       Delta = Delta,
-                                       data = data,
-                                       maxiter = maxiter,
-                                       use_cumulative_hazard = use_cumulative_hazard)
+      return_list = cmi_fp_stabilized_wo_mean_single(imputation_model = imputation_model,
+                                                     dist = dist,
+                                                     data = data,
+                                                     maxiter = maxiter,
+                                                     use_cumulative_hazard = use_cumulative_hazard)
     } else {
       if (!is.null(seed)) {
         set.seed(seed)
@@ -62,13 +54,11 @@ cmi_fp_stabilized = function(imputation_formula, dist, W, Delta, data, with_mean
       return_list = list()
       for (b in 1:boots) {
         re_data = data[sample(x = 1:nrow(data), size = nrow(data), replace = TRUE), ]
-        return_list[[b]] = cmi_fp_eq15_single(imputation_formula = imputation_formula,
-                                              dist = dist,
-                                              W = W,
-                                              Delta = Delta,
-                                              data = re_data,
-                                              maxiter = maxiter,
-                                              use_cumulative_hazard = use_cumulative_hazard)
+        return_list[[b]] = cmi_fp_stabilized_wo_mean_single(imputation_model = imputation_model,
+                                                            dist = dist,
+                                                            data = re_data,
+                                                            maxiter = maxiter,
+                                                            use_cumulative_hazard = use_cumulative_hazard)
       }
     }
   }

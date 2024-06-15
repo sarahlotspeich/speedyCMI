@@ -5,10 +5,8 @@
 \title{Fully parametric imputation for a right-censored covariate with conditional means using the stabilized integral}
 \usage{
 cmi_fp_stabilized(
-  imputation_formula,
+  imputation_model,
   dist,
-  W,
-  Delta,
   data,
   with_mean = FALSE,
   use_cumulative_hazard = TRUE,
@@ -18,15 +16,11 @@ cmi_fp_stabilized(
 )
 }
 \arguments{
-\item{imputation_formula}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
+\item{imputation_model}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
 
 \item{dist}{imputation model distribution passed through to \code{survreg}. Options of \code{dist =} \code{"exponential"}, \code{"loglogistic"}, \code{"lognormal"}, and \code{"weibull"} currently accepted.}
 
-\item{W}{character, column name for observed values of the censored covariate}
-
-\item{Delta}{character, column name for censoring indicators. Note that \code{Delta = 0} is interpreted as a censored observation.}
-
-\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
+\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.}
 
 \item{with_mean}{logical, if \code{TRUE} the stabilized integral with the mean is used. Default is \code{FALSE}.}
 
