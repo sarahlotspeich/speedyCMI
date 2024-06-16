@@ -59,9 +59,7 @@ cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals =
   ## compute time-at-risk
   pdata$risktime = pdata[[setup$Wname]] - pdata[['start']]
   ## Obtain breaks assuming last cutpoint = infinity; create names for factor variable
-  if (breaks[length(breaks)] != Inf) {
-    breaks = append(breaks, Inf) ### Append infinity to the end
-  }
+  breaks[length(breaks)] = Inf
   intvlnames = paste0('[', breaks[-length(breaks)], ', ', breaks[-1],')')
   pdata$interval = factor(pdata$interval,
                           labels = intvlnames)
