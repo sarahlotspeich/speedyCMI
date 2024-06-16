@@ -26,6 +26,9 @@ cmi_fp_analytical = function(imputation_model, dist, data, nintervals = NULL, br
   W = all.vars(imputation_model)[1] ## censored covariate
   Delta = all.vars(imputation_model)[2] ## corresponding event indicator
 
+  # Convert data to dataframe (just in case)
+  data = data.frame(data)
+
   # Single imputation
   if (boots == 0) {
     if (toupper(dist) == "WEIBULL") {
