@@ -2,8 +2,8 @@
 #'
 #' Single, fully parametric conditional mean imputation for a right-censored covariate using a piecewise exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (11) of the manuscript.
 #'
-#' @param imputation_formula imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
-#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.
+#' @param imputation_model imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.
+#' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.
 #' @param max_iter (optional) numeric, maximum iterations allowed in call to \code{survival::survreg()}. Default is \code{100}.
 #' @param nintervals integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.
 #' @param breaks vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.
@@ -17,7 +17,7 @@
 #' @importFrom survival psurvreg
 #' @importFrom survival survSplit
 
-cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
+cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
   ## Checks
   if (is.null(nintervals)) {
     if (is.null(breaks)) {
@@ -26,12 +26,12 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
   }
 
   ## Perform checks and start setup
-  setup = cmi_pwe_setup(imputation_formula, data)
+  setup = cmi_pwe_setup(imputation_model, data)
   W  = data[[setup$Wname]]
   Delta = data[[setup$Deltaname]]
 
   ## Get terms from formula
-  tt = terms(imputation_formula,
+  tt = terms(imputation_model,
              data = data)
 
   ## Compute breaks based on nintervals quantiles (if specified)
@@ -50,7 +50,7 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
     }
   }
   ## Create pseudo-data for Poisson likelihood;
-  pdata = survSplit(imputation_formula,
+  pdata = survSplit(imputation_model,
                     data = data,
                     cut = breaks,
                     episode = "interval",
@@ -91,7 +91,7 @@ cmi_fp_pwe_single = function(imputation_formula, data, maxiter = 100, nintervals
   C = data2[[setup$Wname]] ## Censored times
 
   ## Extract design matrix (ignoring intercept terms / basline hazards)
-  X = model.matrix(imputation_formula, data2)
+  X = model.matrix(imputation_model, data2)
   if ( '(Intercept)' %in% colnames(X) ) {
     intindx = which(colnames(X) == '(Intercept)')
     X = X[, -intindx]

@@ -5,7 +5,7 @@
 \title{Single, fully parametric conditional mean imputation for a right-censored covariate (piecewise exponential distribution) with conditional means following Equation (11)}
 \usage{
 cmi_fp_pwe_single(
-  imputation_formula,
+  imputation_model,
   data,
   maxiter = 100,
   nintervals = NULL,
@@ -13,9 +13,9 @@ cmi_fp_pwe_single(
 )
 }
 \arguments{
-\item{imputation_formula}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
+\item{imputation_model}{imputation model formula (or coercible to formula), a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See the documentation for \code{Surv} for details.}
 
-\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_formula}.}
+\item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and any other variables in \code{imputation_model}.}
 
 \item{nintervals}{integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.}
 
