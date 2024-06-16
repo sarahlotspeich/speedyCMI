@@ -53,10 +53,8 @@ for (s in 1:nrow(sett_old)) {
 
   ## Impute censored covariates
   time_imp = system.time(
-    imp_dat <- cmi_fp_original(imputation_formula = Surv(time = w, event = d) ~ z,
+    imp_dat <- cmi_fp_original(imputation_model = Surv(time = w, event = d) ~ z,
                                dist = "weibull",
-                               W = "w",
-                               Delta = "d",
                                data = dat)
   )
 
@@ -92,10 +90,8 @@ for (s in 1:nrow(sett_new)) {
 
   ## Impute censored covariates
   time_imp = system.time(
-    imp_dat <- cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+    imp_dat <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
                                  dist = "weibull",
-                                 W = "w",
-                                 Delta = "d",
                                  data = dat,
                                  with_mean = TRUE)
   )
@@ -132,10 +128,8 @@ for (s in 1:nrow(sett_new2)) {
 
   ## Impute censored covariates
   time_imp = system.time(
-    imp_dat <- cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
+    imp_dat <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
                                  dist = "weibull",
-                                 W = "w",
-                                 Delta = "d",
                                  data = dat,
                                  with_mean = FALSE,
                                  use_cumulative_hazard = TRUE)
@@ -173,10 +167,8 @@ for (s in 1:nrow(sett_analytical)) {
 
   ## Impute censored covariates
   time_imp = system.time(
-    imp_dat <- cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z,
+    imp_dat <- cmi_fp_analytical(imputation_model = Surv(time = w, event = d) ~ z,
                                  dist = "weibull",
-                                 W = "w",
-                                 Delta = "d",
                                  data = dat)
   )
 
