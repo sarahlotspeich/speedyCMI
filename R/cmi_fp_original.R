@@ -34,8 +34,6 @@ cmi_fp_original = function(imputation_model, dist, data, maxiter = 100, boots = 
       re_data = data[sample(x = 1:nrow(data), size = nrow(data), replace = TRUE), ]
       return_list[[b]] = cmi_fp_original_single(imputation_model = imputation_model,
                                                 dist = dist,
-                                                W = W,
-                                                Delta = Delta,
                                                 data = re_data,
                                                 maxiter = maxiter)
     }

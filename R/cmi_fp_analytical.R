@@ -80,29 +80,21 @@ cmi_fp_analytical = function(imputation_model, dist, data, nintervals = NULL, br
       if (toupper(dist) == "WEIBULL") {
         ## If Weibull, use equation at the end of Section 2.4.1
         return_list[[b]] = cmi_fp_weibull_single(imputation_model = imputation_model,
-                                                 W = W,
-                                                 Delta = Delta,
                                                  data = b_data,
                                                  maxiter = maxiter)
         } else if (toupper(dist) == "EXPONENTIAL") {
         ## If exponential, use equation from Section 2.4.2
         return_list[[b]] = cmi_fp_expo_single(imputation_model = imputation_model,
-                                              W = W,
-                                              Delta = Delta,
                                               data = b_data,
                                               maxiter = maxiter)
       } else if (toupper(dist) %in% c("LOGNORMAL", "LOGGAUSSIAN")) {
         ## If log-normal, use equation at the end of Section 2.4.3
         return_list[[b]] = cmi_fp_lognorm_single(imputation_model = imputation_model,
-                                                 W = W,
-                                                 Delta = Delta,
                                                  data = b_data,
                                                  maxiter = maxiter)
       } else if (toupper(dist) == "LOGLOGISTIC") {
         ## If log-logistic, use equation at the end of Section 2.4.4
         return_list[[b]] = cmi_fp_loglogistic_single(imputation_model = imputation_model,
-                                                     W = W,
-                                                     Delta = Delta,
                                                      data = b_data,
                                                      maxiter = maxiter)
       } else if (toupper(dist) == "PWE") {
