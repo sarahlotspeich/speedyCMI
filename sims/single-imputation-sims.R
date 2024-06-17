@@ -13,14 +13,14 @@ library(ggplot2) ## to plot results
 # /////////////////////////////////////////////////////////////////////////
 generate_data = function(n, censoring = "light") {
   z = rbinom(n = n, size = 1, prob = 0.5) # Uncensored covariate
-  x = rweibull(n = n, shape = 0.75, scale = 0.25 + 0.25 * z)  # To-be-censored covariate
+  x = rlnorm(n = n, meanlog = 0 + 0.05 * z, sdlog = 0.5) # To-be-censored covariate
   e = rnorm(n = n, mean = 0, sd = 1) # Random errors
   y = 1 + 0.5 * x + 0.25 * z + e # Continuous outcome
   q = ifelse(test = censoring == "light",
-             yes = 0.5, ## ~ 12%
+             yes = 0.2, # ~ 20%
              no = ifelse(test = censoring == "heavy",
-                         yes = 2.9, ## ~ 41%
-                         no = 20) ## ~ 78%
+                         yes = 0.4, # ~35%
+                         no = 1.67) # ~79%
   ) # Rate parameter for censoring
   c = rexp(n = n, rate = q) # Random censoring mechanism
   w = pmin(x, c) # Observed covariate value
@@ -54,7 +54,7 @@ for (s in 1:nrow(sett_old)) {
   ## Impute censored covariates
   time_imp = system.time(
     imp_dat <- cmi_fp_original(imputation_model = Surv(time = w, event = d) ~ z,
-                               dist = "weibull",
+                               dist = "lognormal",
                                data = dat)
   )
 
@@ -91,7 +91,7 @@ for (s in 1:nrow(sett_new)) {
   ## Impute censored covariates
   time_imp = system.time(
     imp_dat <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
-                                 dist = "weibull",
+                                 dist = "lognormal",
                                  data = dat,
                                  with_mean = TRUE)
   )
@@ -129,7 +129,7 @@ for (s in 1:nrow(sett_new2)) {
   ## Impute censored covariates
   time_imp = system.time(
     imp_dat <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
-                                 dist = "weibull",
+                                 dist = "lognormal",
                                  data = dat,
                                  with_mean = FALSE,
                                  use_cumulative_hazard = TRUE)
@@ -168,7 +168,7 @@ for (s in 1:nrow(sett_analytical)) {
   ## Impute censored covariates
   time_imp = system.time(
     imp_dat <- cmi_fp_analytical(imputation_model = Surv(time = w, event = d) ~ z,
-                                 dist = "weibull",
+                                 dist = "lognormal",
                                  data = dat)
   )
 
