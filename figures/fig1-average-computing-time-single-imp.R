@@ -45,5 +45,5 @@ sett |>
         axis.title = element_text(face = "bold")) +
   ggthemes::scale_color_colorblind(name = "Imputation\nApproach:") +
   guides(color = guide_legend(ncol=1, byrow=TRUE))
-ggsave(filename = "speedyCMI/figures/fig1-average-computing-time-weibull-single-imp.png",
+ggsave(filename = "speedyCMI/figures/fig1-average-computing-time-single-imp.png",
        device = "png", width = 10, height = 6, units = "in")
