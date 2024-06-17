@@ -36,6 +36,9 @@ cmi_fp_stabilized(
 A list (or, in the case of multiple imputation, a list of lists) containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
+\item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
+\item{coefficients}{Vector of coefficients from the \code{imputation_model} fit.}
+\item{scale}{Scale from the \code{imputation_model} fit.}
 }
 \description{
 Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then computes conditional means using the stabilized integral.

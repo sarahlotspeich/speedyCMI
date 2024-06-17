@@ -19,6 +19,8 @@ cmi_fp_stabilized_w_mean_single(imputation_model, dist, data, maxiter = 100)
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
+\item{coefficients}{Vector of coefficients from the \code{imputation_model} fit.}
+\item{scale}{Scale from the \code{imputation_model} fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then integrates over the estimated survival function from \code{0} to \code{W} to compute conditional means using the stabilized integral.
