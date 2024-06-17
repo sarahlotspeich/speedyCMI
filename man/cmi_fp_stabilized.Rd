@@ -37,6 +37,7 @@ A list (or, in the case of multiple imputation, a list of lists) containing:
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
+\item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit.}
 \item{coefficients}{Vector of coefficients from the \code{imputation_model} fit.}
 \item{scale}{Scale from the \code{imputation_model} fit.}
 }

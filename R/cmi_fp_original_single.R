@@ -11,6 +11,7 @@
 #' \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #' \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
+#' \item{bic}{Bayesian information criterion (BIC) from the \code{imputation_model} fit.}
 #' \item{coefficients}{Vector of coefficients from the \code{imputation_model} fit.}
 #' \item{scale}{Scale from the \code{imputation_model} fit.}
 #'
@@ -70,6 +71,7 @@ cmi_fp_original_single = function(imputation_model, dist, data, maxiter = 100) {
   return_list = list(imputed_data = data,
                      code = !any(is.na(data$imp)),
                      aic = AIC(object = fit),
+                     bic = BIC(object = fit),
                      coefficients = fit$coefficients,
                      scale = fit$scale)
   return(return_list)
