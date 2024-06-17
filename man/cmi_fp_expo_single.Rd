@@ -21,6 +21,8 @@ cmi_fp_expo_single(imputation_model, W, Delta, data, maxiter = 100)
 \item{imputed_data}{A copy of \code{data} with added column \code{imp} containing the imputed values.}
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit.}
+\item{coefficients}{Vector of coefficients from the \code{imputation_model} fit.}
+\item{scale}{Scale from the \code{imputation_model} fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using an exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (5) of the manuscript.
