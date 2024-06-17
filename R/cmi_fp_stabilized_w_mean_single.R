@@ -118,7 +118,8 @@ cmi_fp_stabilized_w_mean_single = function(imputation_model, dist, data, maxiter
 
       # Return input dataset with appended column imp containing imputed values
       return_list = list(imputed_data = data,
-                         code = !any(is.na(data$imp)))
+                         code = !any(is.na(data$imp)),
+                         aic = AIC(object = fit))
       return(return_list)
     }
   }

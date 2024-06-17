@@ -102,7 +102,11 @@ cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals =
   blhazindx = which(names(beta) %in% paste0('interval', intvlnames))
   logblhaz = beta[blhazindx]
   beta = beta[-blhazindx]
-  lp = (X %*% beta)[, 1]
+  if (length(beta) == 0) {
+    lp = rep(0, nrow(X))
+  } else {
+    lp = (X %*% beta)[, 1]
+  }
   J = length(breaks) - 1
 
   ## Compute survival function at each endpoint
