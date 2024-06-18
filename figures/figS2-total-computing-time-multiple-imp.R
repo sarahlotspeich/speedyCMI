@@ -41,5 +41,5 @@ sett |>
   ggthemes::scale_color_colorblind(name = "Imputation\nApproach:") +
   guides(color = guide_legend(ncol=1, byrow=TRUE))
 
-ggsave(filename = "speedyCMI/figures/figS2-total-computing-time-weibull-multiple-imp.png",
+ggsave(filename = "speedyCMI/figures/figS2-total-computing-time-multiple-imp.png",
        device = "png", width = 10, height = 6, units = "in")
