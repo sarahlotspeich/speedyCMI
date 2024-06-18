@@ -64,7 +64,7 @@ cmi_fp_analytical = function(imputation_model, dist, data, nintervals = NULL, br
                                               maxiter = maxiter)
     } else if (toupper(dist) == "PWE") {
       ## If piecewise exponential, use equation at the end of Section 2.4.5
-      return_list = cmi_fp_pwe_single(imputation_model = imputation_model,
+      return_list = eha_cmi_fp_pwe_single(imputation_model = imputation_model,
                                       data = data,
                                       maxiter = maxiter,
                                       nintervals = nintervals,
@@ -102,7 +102,7 @@ cmi_fp_analytical = function(imputation_model, dist, data, nintervals = NULL, br
                                                      maxiter = maxiter)
       } else if (toupper(dist) == "PWE") {
         ## If piecewise exponential, use equation at the end of Section 2.4.5
-        return_list[[b]] = cmi_fp_pwe_single(imputation_model = imputation_model,
+        return_list[[b]] = eha_cmi_fp_pwe_single(imputation_model = imputation_model,
                                              data = b_data,
                                              maxiter = maxiter,
                                              nintervals = nintervals,
