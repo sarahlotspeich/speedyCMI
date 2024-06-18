@@ -12,10 +12,10 @@
 #' \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 #' \item{aic}{Akaike information criterion (AIC) from the imputation model fit.}
 #' \item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit.}
+#' \item{coefficients}{Coefficients for covariates in the \code{imputation_model} fit.}
+#' \item{logblhaz}{Log baseline hazards from the \code{imputation_model} fit.}
 #'
-#' @importFrom survival survreg
 #' @importFrom survival Surv
-#' @importFrom survival psurvreg
 #' @importFrom survival survSplit
 
 cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
@@ -141,9 +141,34 @@ cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals =
   data$imp  = data[[setup$Wname]]
   data$imp[data[[setup$Deltaname]] == 0] = imp
 
+  ## Compute the maximum of the log-likelihood
+  ## Extract design matrix for *full* data (ignoring intercept terms / basline hazards)
+  Xf = model.matrix(imputation_model, data)
+  if ( '(Intercept)' %in% colnames(Xf) ) {
+    intindx = which(colnames(Xf) == '(Intercept)')
+    Xf = Xf[, -intindx]
+    if (is.null(ncol(Xf))) {
+      Xf = data.matrix(frame = Xf)
+    }
+  }
+  if (length(beta) == 0) {
+    lp = rep(0, nrow(Xf))
+  } else {
+    lp = (Xf %*% beta)[, 1]
+  }
+  ll = loglik_pweph(y = data[, Wname],
+                    event = data[, Deltaname],
+                    X = Xf,
+                    breaks = breaks,
+                    logblhaz = logblhaz,
+                    beta = beta)
+
   # Return input dataset with appended column imp containing imputed values
   return_list = list(imputed_data = data,
                      code = !any(is.na(data$imp)),
-                     aic = fit$aic)
+                     aic = (2 * k - 2 * ll),
+                     bic = (k * log(nrow(X)) - 2 * ll),
+                     coefficients = beta,
+                     logblhaz = logblhaz)
   return(return_list)
 }

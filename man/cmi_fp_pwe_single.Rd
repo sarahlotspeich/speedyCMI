@@ -28,6 +28,8 @@ cmi_fp_pwe_single(
 \item{code}{Indicator of algorithm status (\code{TRUE} or \code{FALSE}).}
 \item{aic}{Akaike information criterion (AIC) from the imputation model fit.}
 \item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit.}
+\item{coefficients}{Coefficients for covariates in the \code{imputation_model} fit.}
+\item{logblhaz}{Log baseline hazards from the \code{imputation_model} fit.}
 }
 \description{
 Single, fully parametric conditional mean imputation for a right-censored covariate using a piecewise exponential model to estimate the conditional survival function and then uses an analytic solution to compute conditional means, as in Equation (11) of the manuscript.
