@@ -39,5 +39,5 @@ sett |>
   ggthemes::scale_color_colorblind(name = "Imputation\nApproach:") +
   guides(fill = guide_legend(ncol=1, byrow=TRUE),
          color = guide_legend(ncol=1, byrow=TRUE))
-ggsave(filename = "speedyCMI/figures/fig4-betas-weibull-multiple-imp.png",
+ggsave(filename = "speedyCMI/figures/figS3-betas-multiple-imp.png",
        device = "png", width = 10, height = 6, units = "in")
