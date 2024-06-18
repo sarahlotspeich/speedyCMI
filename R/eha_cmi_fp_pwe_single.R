@@ -48,11 +48,9 @@ eha_cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, ninterva
   }
 
   # Fit AFT imputation model for X ~ Z
-  fit <- pchreg(formula = imputation_model,
-                cuts = breaks,
-                data = data)
-
-
+  fit = pchreg(formula = imputation_model,
+               cuts = breaks,
+               data = data)
 
   ## Perform checks and start setup
   W  = data[[Wname]]
