@@ -32,3 +32,31 @@ cmi_pwe_setup = function(imputation_formula, data) {
   list('Wname' = Wname,
        'Deltaname' = Deltaname)
 }
+
+loglik_pweph <- function(y, event, X, breaks, logblhaz, beta) {
+
+  ## Compute hazard for each interval
+  lp     <- (as.matrix(X) %*% beta)[, 1]
+
+  ## Get interval start and end points
+  J     <- length(breaks) - 1
+  start <- breaks[1:J]
+  end   <- breaks[2:(J+1)]
+
+  ## Initialize log likelihood contribution
+  loglik <- numeric(length(y))
+  for ( j in 1:J ) {
+    loghaz_j <- logblhaz[j] + lp
+    atrisk_j <- ( y >= start[j] )
+    action_j <- atrisk_j & ( y < end[j] ) & ( event == 1 )
+
+    ## Compute survival likelihood contribution
+    logrisktime_j    <- log( pmin(y[atrisk_j], end[j]) - start[j] )
+    loglik[atrisk_j] <- loglik[atrisk_j] - exp(logrisktime_j + loghaz_j[atrisk_j] )
+
+    ## Compute hazard likelihood contribution
+    loglik[action_j] <- loglik[action_j] + loghaz_j[action_j]
+  }
+
+  return(sum(loglik))
+}
