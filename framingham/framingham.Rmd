@@ -1,0 +1,501 @@
+---
+title: "framingham"
+author: "Sarah Lotspeich"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load packages
+library(riskCommunicator) ## for the Framingham teaching data
+library(tableone) ## for Table 1
+library(ggplot2) ## for pretty plots
+library(speedyCMI) ## for imputation methods
+```
+
+## Data
+
+```{r}
+# Load the data
+data(framingham)
+length(unique(framingham$RANDID)) ## 4434 patients
+```
+
+There are `r length(unique(framingham$RANDID))` patients in the Framingham teaching dataset.
+
+```{r}
+to_exclude = framingham |> 
+  dplyr::group_by(RANDID) |> 
+  dplyr::filter(AGE == min(AGE), ## subset to first visits,
+                PREVHYP == 1) |> ## and patients with hypertension at first visit
+  dplyr::pull(RANDID) ## create a vector of their IDs
+length(to_exclude) # 1430 patients excluded for prevalent hypertension
+```
+
+We excluded `r length(to_exclude)` patients who had prevalent hypertension at their first visit in the Framingham Study. We then subsetted the data for the remaining patients to include only visits leading up to and including a hypertension diagnosis (or end of followup).
+
+```{r}
+to_analyze = framingham |> 
+  dplyr::filter(!(RANDID %in% to_exclude), ## exclude patients with prevalence hypertension (at baseline)
+                TIME <= TIMEHYP) ## subset to visits up to and including hypertension diagnosis
+```
+
+The analysis data included each patient's first and last visits (either hypertension diagnosis or end of followup), keeping their `SYSBP`, `SEX`, `AGE`, `BMI`, and `TIMEHYP` from each. 
+
+```{r}
+to_analyze_first = to_analyze |> 
+  dplyr::group_by(RANDID) |> 
+  dplyr::filter(AGE == min(AGE)) |> 
+  dplyr::rename(SYSBP0 = SYSBP, 
+                AGE0 = AGE, 
+                BMI0 = BMI) |> 
+  dplyr::select(RANDID, SEX, AGE0, BMI0, SYSBP0, TIMEHYP) |> 
+  dplyr::mutate(TIMEHYP = TIMEHYP / 365, ## convert time from days --> years
+                SEX = factor(x = SEX, 
+                             levels = c(1, 2), 
+                             labels = c("MALE", "FEMALE"))
+                ) 
+
+to_analyze_last = to_analyze |> 
+  dplyr::group_by(RANDID) |> 
+  dplyr::filter(AGE == max(AGE)) |> 
+  dplyr::rename(SYSBP1 = SYSBP, 
+                AGE1 = AGE, 
+                BMI1 = BMI) |> 
+  dplyr::select(RANDID, AGE1, BMI1, SYSBP1, HYPERTEN)
+
+to_analyze = to_analyze_first |> 
+  dplyr::left_join(to_analyze_last) |> 
+  dplyr::mutate(SYSBP_CHANGE = SYSBP0 - SYSBP1)
+```
+
+We excluded `r with(to_analyze, sum(AGE0 == AGE1))` patients who had only one visit before hypertension diagnosis or end of followup. 
+
+```{r}
+to_analyze = to_analyze |> 
+  dplyr::filter(AGE0 != AGE1) ## subset to patients with at least two visits
+nrow(to_analyze) # 2225 patients 
+```
+
+Finally, we excluded `r with(to_analyze, sum(is.na(BMI0)))` patients who were missing `BMI` at their first visit. 
+
+```{r}
+to_analyze = to_analyze |> 
+  dplyr::filter(!is.na(BMI0)) ## subset to patients with non-missing BMI
+nrow(to_analyze) # 2218 patients 
+```
+
+These exclusions left a sample of `r nrow(to_analyze)` patients for the analysis of change in systolic blood pressure. 
+
+## Exploratory Data Analysis
+
+Patients with and without hypertension are described below. From this table, we observe the following: 
+
+  -   There was a higher proportion of women with hypertension, but a lower proportion of men. 
+  -   On average, patients diagnosed with hypertension tended to be older (by about $2$ years) than those who were not diagnosed. 
+  -   On average, patients diagnosed with hypertension tended to have higher BMIs (by about $1$ point) than those who were not diagnosed. 
+  -   On average, patients diagnosed with hypertension tended to have higher systolic blood pressures at both their first and last visits than those who were not diagnosed.
+
+```{r, echo = FALSE}
+tab1 =  CreateTableOne(vars = c("SEX", "AGE0", "BMI0", "SYSBP0", "SYSBP1"), 
+                       strata = "HYPERTEN", 
+                       data = to_analyze)
+print(tab1, showAllLevels = TRUE, formatOptions = list(big.mark = ","))
+```
+
+The relationship between systolic blood pressure at first and last visits was positive among patients diagnosed with hypertension or undiagnosed. However, patients diagnosed with hypertension consistently had higher followup systolic blood pressure than patients not diagnosed across all baseline values.
+
+```{r}
+to_analyze |> 
+  ggplot(aes(x = SYSBP0, y = SYSBP1, color = factor(HYPERTEN))) + 
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm") + 
+  theme_minimal()
+```
+
+## Imputation Model Selection
+
+```{r}
+### Function to make density plot of the distribution of TIMEHYP by diagnosis
+density_plot = function(imp_fit, title) {
+  imp_fit$imputed_data |> 
+    dplyr::mutate(HYPERTEN = factor(x = HYPERTEN, 
+                                    levels = c(1, 0), 
+                                    labels = c("Diagnosed\n(Uncensored)", "Undiagnosed\n(Censored)"))) |> 
+    ggplot(aes(x = imp, fill = HYPERTEN)) + 
+    geom_density(alpha = 0.7) + 
+    geom_vline(xintercept = 25, linetype = 2) + 
+    ggthemes::scale_fill_colorblind(name = "Patient\nStatus:") +
+    theme_minimal() + 
+    theme(legend.position = "right") + 
+    xlab("Time to Hypertension Diagnosis\n(Observed or Imputed)") + 
+    ylab("Density") + 
+    ggtitle(title) + 
+    xlim(c(0, 160))
+}
+```
+
+### (i) Weibull Distribution
+```{r}
+## (1) Weibull
+weib_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                             dist = "weibull", 
+                             data = to_analyze)
+### Parameters of the fitted model
+weib_params = c(weib_imp$coefficients, weib_imp$scale)
+weib_params
+### AIC for the fitted model
+weib_aic = weib_imp$aic
+weib_aic
+### BIC for the fitted model
+weib_bic = weib_imp$bic
+weib_bic
+### Density plot of the distribution of TIMEHYP
+weib_plot = weib_imp |> 
+  density_plot(title = "Weibull Imputation Model")
+weib_plot
+```
+
+### (ii) Exponential Distribution
+```{r}
+## (2) Exponential
+expo_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                             dist = "exponential", 
+                             data = to_analyze)
+### Parameters of the fitted model
+expo_params = c(expo_imp$coefficients, expo_imp$scale)
+expo_params
+### AIC for the fitted model
+expo_aic = expo_imp$aic
+expo_aic
+### BIC for the fitted model
+expo_bic = expo_imp$bic 
+expo_bic
+### Density plot of the distribution of TIMEHYP
+expo_plot = expo_imp |> 
+  density_plot(title = "Exponential Imputation Model")
+expo_plot
+```
+
+### (iii) Log-Normal Distribution
+```{r}
+## (3) Log-normal
+lognorm_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                                dist = "lognormal", 
+                                data = to_analyze)
+### Parameters of the fitted model
+lognorm_params = c(lognorm_imp$coefficients, lognorm_imp$scale)
+lognorm_params
+### AIC for the fitted model
+lognorm_aic = lognorm_imp$aic
+lognorm_aic
+### BIC for the fitted model
+lognorm_bic = lognorm_imp$bic
+lognorm_bic
+### Density plot of the distribution of TIMEHYP
+lognorm_plot = lognorm_imp |> 
+  density_plot(title = "Log-Normal Imputation Model")
+lognorm_plot
+```
+
+### (iv) Log-Logistic Distribution
+```{r}
+## (4) Log-logistic
+loglog_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                               dist = "loglogistic", 
+                               data = to_analyze)
+### Parameters of the fitted model
+loglog_params = c(loglog_imp$coefficients, loglog_imp$scale)
+loglog_params
+### AIC for the fitted model
+loglog_aic = loglog_imp$aic
+loglog_aic
+### BIC for the fitted model
+loglog_bic = loglog_imp$bic
+loglog_bic
+### Density plot of the distribution of TIMEHYP
+loglog_plot = loglog_imp |> 
+  density_plot(title = "Log-Logistic Imputation Model")
+loglog_plot
+```
+
+### (v) Piecewise Exponential Distribution
+```{r}
+## (5) Piecewise exponential
+to_analyze = to_analyze |> 
+  dplyr::mutate(FEMALE = as.numeric(SEX == "FEMALE"))
+pwe_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ FEMALE + AGE0 + BMI0 + SYSBP0, 
+                            dist = "pwe", 
+                            data = to_analyze, 
+                            nintervals = 10)
+### Parameters of the fitted model
+pwe_params = c(pwe_imp$coefficients, pwe_imp$logblhaz)
+pwe_params
+### AIC for the fitted model
+pwe_aic = pwe_imp$aic
+pwe_aic
+### BIC for the fitted model
+pwe_bic = pwe_imp$bic
+pwe_bic
+### Density plot of the distribution of TIMEHYP
+pwe_plot = pwe_imp |> 
+  density_plot(title = paste("Piecewise Exponential Imputation Model"))
+pwe_plot
+```
+
+### Comparing Model Fits
+
+```{r}
+data.frame(Distribution = c("Exponential", "Log-Logistic", 
+                            "Log-Normal", "Piecewise Exponential", 
+                            "Weibull"), 
+           AIC = c(expo_aic, loglog_aic, lognorm_aic, pwe_aic, weib_aic), 
+           BIC = c(expo_bic, loglog_bic, lognorm_bic, pwe_bic, weib_bic)) |> 
+  kableExtra::kable(format = "html") |> 
+  kableExtra::kable_styling()
+```
+
+### Comparing Imputed Values
+
+```{r, fig.height = 7, fig.width = 7, echo = FALSE}
+all_plot = weib_imp$imputed_data |> 
+  dplyr::mutate(Model = "Weibull") |> 
+  dplyr::bind_rows(
+    expo_imp$imputed_data |> 
+      dplyr::mutate(Model = "Exponential")
+  ) |> 
+  dplyr::bind_rows(
+    lognorm_imp$imputed_data |> 
+      dplyr::mutate(Model = "Log-Normal")
+  ) |> 
+  dplyr::bind_rows(
+    loglog_imp$imputed_data |> 
+      dplyr::mutate(Model = "Log-Logistic")
+  ) |> 
+  dplyr::bind_rows(
+    pwe_imp$imputed_data |> 
+      dplyr::mutate(Model = "Piecewise Exponential")
+  ) |> 
+  dplyr::mutate(HYPERTEN = factor(x = HYPERTEN, 
+                                  levels = c(1, 0), 
+                                  labels = c("Diagnosed (Uncensored)", "Undiagnosed (Censored)"))) |> 
+  ggplot(aes(x = imp, fill = HYPERTEN)) + 
+  geom_density(alpha = 0.7) + 
+  geom_vline(xintercept = 25, linetype = 2) + 
+  ggthemes::scale_fill_colorblind(name = "Patient Status:") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "top", 
+        legend.title = element_text(face = "bold"),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white"),
+        axis.title = element_text(face = "bold")) + 
+  xlab("Time to Hypertension Diagnosis (Observed or Imputed) in Years") + 
+  ylab("Density") + 
+  facet_wrap(~Model)
+all_plot
+ggsave(filename = "~/Documents/speedyCMI/figures/fig4-density-imputed.png", 
+       plot = all_plot, width = 7, height = 7)
+```
+
+
+
+## Models 
+
+### Naive Analysis (Time to Hypertension or End of Followup)
+
+Among all `r nrow(to_analyze)` patients, whether or not they were diagnosed with hypertension, the adjusted relationship between their systolic blood pressures at the first and last visits is as follows. Note that time to hypertension **or end of followup** is being used "naively" in place of time to hypertension.
+
+```{r}
+naive_fit = lm(SYSBP1 ~ SYSBP0 + TIMEHYP + SEX + AGE0 + BMI0, 
+               data = to_analyze)
+knitr::kable(coefficients(summary(naive_fit)), digits = 3)
+knitr::kable(confint(naive_fit), digits = 3)
+forest_dat = coefficients(summary(naive_fit)) |> 
+  data.frame() |> 
+  dplyr::mutate(Coefficient = rownames(coefficients(summary(naive_fit))),
+                Method = "Naive Analysis") |> 
+  dplyr::inner_join(
+    confint(naive_fit) |> 
+      data.frame() |> 
+      dplyr::mutate(Coefficient = rownames(confint(naive_fit))) |> 
+      magrittr::set_colnames(c("LB", "UB", "Coefficient"))
+  )
+```
+
+  -   Higher systolic blood pressures at first visit were associated with higher systolic blood pressures at last visit. On average, for every 1 mmHg higher a patient's systolic blood pressure was at first visit, their systolic blood pressure was expected to be `r round(naive_fit$coefficients[2], 3)` mmHg *higher* at last visit.
+  -   Patients who were farther from a hypertension diagnosis at first visit (i.e., larger `TIMEHYP`) were expected to have lower systolic blood pressures at last visit, on average. Specifically, for every $1$ year farther away they were from their hypertension diagnosis at their first visit, their systolic blood pressure at that time was expected to be `r abs(round(naive_fit$coefficients[3], 3))` mmHg *lower* at their last visit.
+  -   Patients who were older at their first visit had  higher systolic blood pressures at their last visit, on average. For every year older a patient was at their first visit, their systolic blood pressure was expected to be `r round(naive_fit$coefficients[4], 3)` mmHg *higher* at last visit.
+  -   Patients with higher BMIs at their first visit hadlower systolic blood pressures at their last visit, on average. For every $1$ point higher a patient's BMI was at their first visit, their systolic blood pressure was expected to be `r abs(round(naive_fit$coefficients[5], 3))` mmHg *lower* at last visit.
+
+### Complete Case Analysis (Time to Hypertension)
+
+Among only the subset of `r sum(to_analyze$HYPERTEN)` patients who were diagnosed with hypertension, the adjusted relationship between their systolic blood pressures at the first and last visits is as follows.
+
+```{r}
+cc_fit = lm(SYSBP1 ~ SYSBP0 + TIMEHYP + SEX + AGE0 + BMI0, 
+            data = to_analyze, 
+            subset = HYPERTEN == 1)
+knitr::kable(coefficients(summary(cc_fit)), digits = 3)
+knitr::kable(confint(cc_fit), digits = 3)
+forest_dat = coefficients(summary(cc_fit)) |> 
+  data.frame() |> 
+  dplyr::mutate(Coefficient = rownames(coefficients(summary(cc_fit))),
+                Method = "Complete Case Analysis") |> 
+  dplyr::inner_join(
+    confint(cc_fit) |> 
+      data.frame() |> 
+      dplyr::mutate(Coefficient = rownames(confint(cc_fit))) |> 
+      magrittr::set_colnames(c("LB", "UB", "Coefficient"))
+  ) |> 
+  dplyr::bind_rows(forest_dat)
+```
+
+  -   Higher systolic blood pressures at first visit were associated with higher systolic blood pressures at last visit. On average, for every 1 mmHg higher a patient's systolic blood pressure was at first visit, their systolic blood pressure was expected to be `r round(cc_fit$coefficients[2], 3)` mmHg *higher* at last visit.
+  -   Patients who were farther from a hypertension diagnosis at first visit (i.e., larger `TIMEHYP`) were expected to have lower systolic blood pressures at last visit, on average. Specifically, for every $1$ year farther away they were from their hypertension diagnosis at their first visit, their systolic blood pressure at that time was expected to be `r abs(round(cc_fit$coefficients[3], 3))` mmHg *lower* at their last visit.
+  -   Patients who were older at their first visit had  higher systolic blood pressures at their last visit, on average. For every year older a patient was at their first visit, their systolic blood pressure was expected to be `r round(cc_fit$coefficients[4], 3)` mmHg *higher* at last visit.
+  -   Patients with higher BMIs at their first visit hadlower systolic blood pressures at their last visit, on average. For every $1$ point higher a patient's BMI was at their first visit, their systolic blood pressure was expected to be `r abs(round(cc_fit$coefficients[5], 3))` mmHg *lower* at last visit.
+
+### Multiple Imputation Analysis
+
+```{r}
+set.seed(333)
+## Fit analysis model to each imputed dataset
+lognorm_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                                dist = "lognormal", 
+                                data = to_analyze, 
+                                boots = 20)
+mult_fit = do.call(what = rbind,
+                   args = lapply(X = lognorm_imp,
+                                 FUN = function(l) {
+                                   summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, data = l$imputed_data))$coefficients
+                                 }
+                   )
+)
+
+## Pool estimates
+### Take sums of estimates and variances
+sum_est_var = rowsum(x = mult_fit[, 1:2],
+                     group = rownames(mult_fit))
+### Divide by the number of imputations to get means
+mean_est_var = sum_est_var / 20
+
+## Save parameter estimates
+mean_est_var
+rownames(mean_est_var)[4] = "TIMEHYP"
+forest_dat = mean_est_var |>
+  data.frame() |> 
+  dplyr::mutate(Coefficient = rownames(mean_est_var),
+                Method = "Multiple Imputation Analysis", 
+                LB = Estimate - 1.96 * Std..Error, 
+                UB = Estimate + 1.96 * Std..Error) |>
+  dplyr::bind_rows(forest_dat)
+```
+
+### Comparing Methods 
+
+```{r, fig.width = 8, fig.height = 6}
+forest_plot = forest_dat |> 
+  dplyr::mutate(Method = factor(x = Method, 
+                                levels = c("Naive Analysis", "Multiple Imputation Analysis", "Complete Case Analysis")),#, 
+                                #labels = c("Naive\nAnalysis", "MLE\nAnalysis", "Complete\nCase\nAnalysis")),
+                Coefficient = factor(x = Coefficient, 
+                                     levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
+                                                "SEXFEMALE", "AGE0", "BMI0"), 
+                                     labels = c("INTERCEPT", "SYSBP0", "TIME", 
+                                                "FEMALE", "AGE", "BMI"))) |> 
+  ggplot(aes(x = Method, y = Estimate, color = Method)) + 
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_point(position = position_dodge(width = 1), 
+             size = 1.5) + 
+  geom_errorbar(aes(ymin = LB, ymax = UB), 
+                position = position_dodge(width = 1), 
+                linewidth = 1) + 
+  theme_minimal(base_size = 14) +
+  facet_wrap(~Coefficient, scales = "free") + 
+  ggthemes::scale_color_colorblind(name = "Method:") + 
+  theme(legend.position = "top",
+        legend.title = element_text(face = "bold"),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white"),
+        axis.title = element_text(face = "bold"), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank())
+forest_plot
+ggsave(filename = "~/Documents/speedyCMI/figures/fig5-forest-plot.png", 
+       plot = forest_plot, width = 8, height = 5)
+```
+
+### Comparing Imputation Models 
+
+```{r}
+set.seed(114)
+forest_dat = data.frame()
+for (d in c("weibull", "exponential", "lognormal", "loglogistic")) {
+  ## Fit analysis model to each imputed dataset
+  imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                                  dist = "lognormal", 
+                                  data = to_analyze, 
+                                  boots = 20)
+  mult_fit = do.call(what = rbind,
+                     args = lapply(X = imp,
+                                   FUN = function(l) {
+                                     summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, data = l$imputed_data))$coefficients
+                                   }
+                     )
+  )
+  
+  ## Pool estimates
+  ### Take sums of estimates and variances
+  sum_est_var = rowsum(x = mult_fit[, 1:2],
+                       group = rownames(mult_fit))
+  ### Divide by the number of imputations to get means
+  mean_est_var = sum_est_var / 20
+  
+  ## Save parameter estimates
+  mean_est_var
+  rownames(mean_est_var)[4] = "TIMEHYP"
+  forest_dat = mean_est_var |>
+    data.frame() |> 
+    dplyr::mutate(Coefficient = rownames(mean_est_var),
+                  Method = toupper(d), 
+                  LB = Estimate - 1.96 * Std..Error, 
+                  UB = Estimate + 1.96 * Std..Error) |>
+    dplyr::bind_rows(forest_dat)  
+}
+```
+
+```{r, fig.width = 8, fig.height = 6}
+forest_plot = forest_dat |> 
+  dplyr::mutate(Coefficient = factor(x = Coefficient, 
+                                     levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
+                                                "SEXFEMALE", "AGE0", "BMI0"), 
+                                     labels = c("INTERCEPT", "SYSBP0", "TIME", 
+                                                "FEMALE", "AGE", "BMI")),
+                Method = factor(x = Method, 
+                                levels = c("LOGNORMAL", "LOGLOGISTIC", "WEIBULL", "EXPONENTIAL"), 
+                                labels = c("Log-Normal", "Log-Logistic", "Weibull", "Exponential"))) |> 
+  ggplot(aes(x = Method, y = Estimate, color = Method)) + 
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_point(position = position_dodge(width = 0.5), 
+             size = 1.5) + 
+  geom_errorbar(aes(ymin = LB, ymax = UB), 
+                position = position_dodge(width = 0.5), 
+                linewidth = 1) + 
+  theme_minimal(base_size = 14) +
+  facet_wrap(~Coefficient, scales = "free") + 
+  ggthemes::scale_color_colorblind(name = "Imputation Model:") + 
+  theme(legend.position = "top",
+        legend.title = element_text(face = "bold"),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white"),
+        axis.title = element_text(face = "bold"), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank())
+forest_plot
+ggsave(filename = "~/Documents/speedyCMI/figures/fig6-forest-plot-imp.png", 
+       plot = forest_plot, width = 8, height = 5)
+```
