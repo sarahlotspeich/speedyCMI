@@ -16,7 +16,7 @@
 #' \item{logblhaz}{Log baseline hazards from the \code{imputation_model} fit.}
 #'
 #' @importFrom survival Surv
-#' @importFrom survival survSplit
+#' @importFrom eha pchreg
 
 cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals = NULL, breaks = NULL) {
   ## Checks
@@ -28,147 +28,46 @@ cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals =
 
   ## Perform checks and start setup
   setup = cmi_pwe_setup(imputation_model, data)
-  W  = data[[setup$Wname]]
-  Delta = data[[setup$Deltaname]]
 
-  ## Get terms from formula
-  tt = terms(imputation_model,
-             data = data)
+  # Initialize imputed values
+  data$imp = data[, setup$Wname] ## start with imp = W
 
   ## Compute breaks based on nintervals quantiles (if specified)
   if (!(is.null(nintervals))) {
     if (is.null(breaks)) {
-      breaks = rep(NA, nintervals + 1)
-      breaks[1] = 0
-      breaks[length(breaks)] = Inf
-      ## Compute percentiles of observed event times
-      Wobs = W[Delta == 1]
-      Wobsqtl = quantile(x = Wobs,
-                         probs = (1:(nintervals - 1)) / nintervals)
-      breaks  = c(0, Wobsqtl, max(Wobs) + 100000)
+      wuncen = data[data[, setup$Deltaname] == 1, setup$Wname]
+      breaks = quantile(x = unlist(wuncen),
+                        probs = seq(1, nintervals-1) / nintervals)
+      breaks = round(x = c(0, breaks, Inf),
+                     digits = 3)
     } else {
       warning('Both nintervals and breaks were specified. Ignoring nintervals and using breaks...')
     }
   }
-  ## Create pseudo-data for Poisson likelihood;
-  pdata = survSplit(imputation_model,
-                    data = data,
-                    cut = breaks,
-                    episode = "interval",
-                    start = "start",
-                    id = 'id')
-  ## compute time-at-risk
-  pdata$risktime = pdata[[setup$Wname]] - pdata[['start']]
-  ## Obtain breaks assuming last cutpoint = infinity; create names for factor variable
-  breaks[length(breaks)] = Inf
-  intvlnames = paste0('[', breaks[-length(breaks)], ', ', breaks[-1],')')
-  pdata$interval = factor(pdata$interval,
-                          labels = intvlnames)
 
-  ## Create glm formula--drop any uncessary variables
-  tlabs = attr(tt, 'term.labels')
-  fmla = reformulate( c('interval', tlabs, 'offset(log(risktime))'), response = setup$Deltaname, intercept = FALSE )
+  # Fit imputation model for X ~ Z
+  fit = pchreg(formula = imputation_model,
+               cuts = breaks,
+               data = data)
 
-  ## Fit PWE model via Poisson likelihood
-  fit = glm(formula = fmla,
-            data = pdata,
-            family = poisson)
-
-  ## -----------------------
-  ## Impute censored times
-  ## -----------------------
-  ## Obtain censored values
-  cenindx = data[[setup$Deltaname]] == 0
-  lower = data[[setup$Wname]][cenindx]
-  idcen = (1:nrow(data))[cenindx]
-
-  ## Filter pdata so that only censored individuals are included
-  pdata = pdata[which(pdata$id %in% idcen), ]
-  data2 = data
-  data2$id = 1:nrow(data2)
-  data2 = data2[which(data2$id %in% idcen), ]
-  C = data2[[setup$Wname]] ## Censored times
-
-  ## Extract design matrix (ignoring intercept terms / basline hazards)
-  X = model.matrix(imputation_model, data2)
-  if ( '(Intercept)' %in% colnames(X) ) {
-    intindx = which(colnames(X) == '(Intercept)')
-    X = X[, -intindx]
-    if (is.null(ncol(X))) {
-      X = data.matrix(frame = X)
-     }
-  }
-  ## Extract coefficients (ignoring intercept terms)
-  beta = coef(fit)
-  blhazindx = which(names(beta) %in% paste0('interval', intvlnames))
-  logblhaz = beta[blhazindx]
-  beta = beta[-blhazindx]
-  if (length(beta) == 0) {
-    lp = rep(0, nrow(X))
-  } else {
-    lp = (X %*% beta)[, 1]
-  }
-  J = length(breaks) - 1
-
-  ## Compute survival function at each endpoint
-  ## and at censored time
-  cumHaz = matrix(0, nrow = nrow(X), ncol = J+1)   ## cumulative hazard at each cut point
-  cumHazCen = matrix(0, nrow = nrow(X), ncol = J+1)   ## cumulative hazard at each point until censoring
-  survProbs = matrix(1, nrow = nrow(X), ncol = J+1)   ## survival probabilities at each cut point
-  survProbsCen = matrix(1, nrow = nrow(X), ncol = J+1)   ## survival probabilities at each cut point
-  survInt = numeric(nrow(X))  ## \int_{0}^{\infty} S(t) dt
-  survIntCen = numeric(nrow(X))  ## \int_{0}^{C} S(t) dt
-  logSurvCen = numeric(nrow(X))  ## log S(C)
-  for (j in 1:J) {
-    ## Compute cumulative hazard and survival at interval j
-    cumHaz[, j+1]    = cumHaz[, j] + exp( logblhaz[j] + lp + log(breaks[j+1] - breaks[j]) )
-    survProbs[, j+1] = exp(-cumHaz[, j+1])
-    survInt          = survInt + exp(log(survProbs[, j] - survProbs[, j+1]) - logblhaz[j])
-    ## See if subject was at risk in interval j;
-    ##  compute time at risk and cumulative hazard in that interval
-    indx_j                    = (C > breaks[j])
-    risktime_j                = pmin(C[indx_j], breaks[j+1]) - breaks[j]
-    cumHazCen[indx_j, j+1]    = cumHazCen[indx_j, j] + exp( logblhaz[j] + lp[indx_j] + log(risktime_j) )
-    survProbsCen[indx_j, j+1] = exp(-cumHazCen[indx_j, j+1])
-    survIntCen[indx_j]        = survIntCen[indx_j] +
-      exp(log(survProbsCen[indx_j, j] - survProbsCen[indx_j, j+1]) - logblhaz[j])
-    logSurvCen[indx_j] = logSurvCen[indx_j] - exp( logblhaz[j] + lp[indx_j] + log(risktime_j) )
-  }
-  ## Impute censoring time
-  imp = C + exp( log( survInt - survIntCen ) - logSurvCen )
-
-  ## Return data set with imputed time
-  data$imp  = data[[setup$Wname]]
-  data$imp[data[[setup$Deltaname]] == 0] = imp
-
-  ## Compute the maximum of the log-likelihood
-  ## Extract design matrix for *full* data (ignoring intercept terms / basline hazards)
-  Xf = model.matrix(imputation_model, data)
-  if ( '(Intercept)' %in% colnames(Xf) ) {
-    intindx = which(colnames(Xf) == '(Intercept)')
-    Xf = Xf[, -intindx]
-    if (is.null(ncol(Xf))) {
-      Xf = data.matrix(frame = Xf)
-    }
-  }
-  if (length(beta) == 0) {
-    lp = rep(0, nrow(Xf))
-  } else {
-    lp = (Xf %*% beta)[, 1]
-  }
-  ll = loglik_pweph(y = data[, Wname],
-                    event = data[, Deltaname],
-                    X = Xf,
-                    breaks = breaks,
-                    logblhaz = logblhaz,
-                    beta = beta)
+  ## Vectorized test
+  wcen = data[data[, setup$Deltaname] == 0, setup$Wname]
+  zcen = data[data[, setup$Deltaname] == 0, setup$Zname]
+  impX = pwe_mean_imputation(centime = wcen,
+                             breaks = breaks,
+                             blhaz = fit$hazards,
+                             X = zcen,
+                             beta = fit$coefficients)
+  data[data[, setup$Deltaname] == 0, "imp"] = impX
 
   # Return input dataset with appended column imp containing imputed values
+  ll = fit$loglik[2] ## maximum of log-likelihood
+  k = length(fit$hazards) + length(fit$coefficients) ## number of parameters
   return_list = list(imputed_data = data,
                      code = !any(is.na(data$imp)),
                      aic = (2 * k - 2 * ll),
-                     bic = (k * log(nrow(X)) - 2 * ll),
-                     coefficients = beta,
-                     logblhaz = logblhaz)
+                     bic = (k * log(nrow(data)) - 2 * ll),
+                     coefficients = fit$coefficients,
+                     logblhaz = fit$hazards)
   return(return_list)
 }
