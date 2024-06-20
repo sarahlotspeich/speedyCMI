@@ -13,7 +13,7 @@
 #' \item{aic}{Akaike information criterion (AIC) from the imputation model fit.}
 #' \item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit.}
 #' \item{coefficients}{Coefficients for covariates in the \code{imputation_model} fit.}
-#' \item{logblhaz}{Log baseline hazards from the \code{imputation_model} fit.}
+#' \item{blhaz}{Baseline hazards from the \code{imputation_model} fit.}
 #'
 #' @importFrom survival Surv
 #' @importFrom eha pchreg
@@ -68,6 +68,6 @@ cmi_fp_pwe_single = function(imputation_model, data, maxiter = 100, nintervals =
                      aic = (2 * k - 2 * ll),
                      bic = (k * log(nrow(data)) - 2 * ll),
                      coefficients = fit$coefficients,
-                     logblhaz = fit$hazards)
+                     blhaz = fit$hazards)
   return(return_list)
 }
