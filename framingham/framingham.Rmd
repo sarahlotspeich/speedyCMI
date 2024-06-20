@@ -301,8 +301,6 @@ ggsave(filename = "~/Documents/speedyCMI/figures/fig4-density-imputed.png",
        plot = all_plot, width = 7, height = 7)
 ```
 
-
-
 ## Models 
 
 ### Naive Analysis (Time to Hypertension or End of Followup)
@@ -432,14 +430,15 @@ ggsave(filename = "~/Documents/speedyCMI/figures/fig5-forest-plot.png",
 ### Comparing Imputation Models 
 
 ```{r}
-set.seed(114)
+set.seed(333)
 forest_dat = data.frame()
-for (d in c("weibull", "exponential", "lognormal", "loglogistic")) {
+for (d in c("lognormal", "weibull", "exponential", "loglogistic", "pwe")) {
   ## Fit analysis model to each imputed dataset
-  imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
-                                  dist = "lognormal", 
-                                  data = to_analyze, 
-                                  boots = 20)
+  imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ FEMALE + AGE0 + BMI0 + SYSBP0, 
+                          dist = d, 
+                          data = to_analyze, 
+                          boots = 20,
+                          nintervals = 10)
   mult_fit = do.call(what = rbind,
                      args = lapply(X = imp,
                                    FUN = function(l) {
@@ -476,8 +475,10 @@ forest_plot = forest_dat |>
                                      labels = c("INTERCEPT", "SYSBP0", "TIME", 
                                                 "FEMALE", "AGE", "BMI")),
                 Method = factor(x = Method, 
-                                levels = c("LOGNORMAL", "LOGLOGISTIC", "WEIBULL", "EXPONENTIAL"), 
-                                labels = c("Log-Normal", "Log-Logistic", "Weibull", "Exponential"))) |> 
+                                levels = c("LOGNORMAL", "LOGLOGISTIC", "WEIBULL", 
+                                           "EXPONENTIAL", "PWE"), 
+                                labels = c("Log-Normal", "Log-Logistic", "Weibull", 
+                                           "Exponential", "Piecewise Exponential"))) |> 
   ggplot(aes(x = Method, y = Estimate, color = Method)) + 
   geom_hline(yintercept = 0, linetype = 2) +
   geom_point(position = position_dodge(width = 0.5), 
