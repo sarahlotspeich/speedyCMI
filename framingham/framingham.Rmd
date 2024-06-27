@@ -233,7 +233,7 @@ pwe_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPE
                             data = to_analyze, 
                             nintervals = 10)
 ### Parameters of the fitted model
-pwe_params = c(pwe_imp$coefficients, pwe_imp$logblhaz)
+pwe_params = c(pwe_imp$coefficients, pwe_imp$blhaz)
 pwe_params
 ### AIC for the fitted model
 pwe_aic = pwe_imp$aic
@@ -253,6 +253,16 @@ pwe_plot
 data.frame(Distribution = c("Exponential", "Log-Logistic", 
                             "Log-Normal", "Piecewise Exponential", 
                             "Weibull"), 
+           MeanTIME = c(mean(expo_imp$imputed_data$imp), 
+                        mean(loglog_imp$imputed_data$imp), 
+                        mean(lognorm_imp$imputed_data$imp), 
+                        mean(pwe_imp$imputed_data$imp), 
+                        mean(weib_imp$imputed_data$imp)),
+           MedianTIME = c(median(expo_imp$imputed_data$imp), 
+                          median(loglog_imp$imputed_data$imp), 
+                          median(lognorm_imp$imputed_data$imp), 
+                          median(pwe_imp$imputed_data$imp), 
+                          median(weib_imp$imputed_data$imp)),
            AIC = c(expo_aic, loglog_aic, lognorm_aic, pwe_aic, weib_aic), 
            BIC = c(expo_bic, loglog_bic, lognorm_bic, pwe_bic, weib_bic)) |> 
   kableExtra::kable(format = "html") |> 
@@ -298,7 +308,7 @@ all_plot = weib_imp$imputed_data |>
   facet_wrap(~Model)
 all_plot
 ggsave(filename = "~/Documents/speedyCMI/figures/fig4-density-imputed.png", 
-       plot = all_plot, width = 7, height = 7)
+       plot = all_plot, width = 10, height = 7)
 ```
 
 ## Models 
@@ -395,7 +405,7 @@ forest_dat = mean_est_var |>
 
 ### Comparing Methods 
 
-```{r, fig.width = 8, fig.height = 6}
+```{r, fig.width = 8, fig.height = 6, echo = FALSE}
 forest_plot = forest_dat |> 
   dplyr::mutate(Method = factor(x = Method, 
                                 levels = c("Naive Analysis", "Multiple Imputation Analysis", "Complete Case Analysis")),#, 
@@ -424,7 +434,7 @@ forest_plot = forest_dat |>
         axis.title.x = element_blank())
 forest_plot
 ggsave(filename = "~/Documents/speedyCMI/figures/fig5-forest-plot.png", 
-       plot = forest_plot, width = 8, height = 5)
+       plot = forest_plot, width = 10, height = 5)
 ```
 
 ### Comparing Imputation Models 
@@ -467,7 +477,7 @@ for (d in c("lognormal", "weibull", "exponential", "loglogistic", "pwe")) {
 }
 ```
 
-```{r, fig.width = 8, fig.height = 6}
+```{r, fig.width = 8, fig.height = 6, echo = FALSE}
 forest_plot = forest_dat |> 
   dplyr::mutate(Coefficient = factor(x = Coefficient, 
                                      levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
@@ -498,5 +508,5 @@ forest_plot = forest_dat |>
         axis.title.x = element_blank())
 forest_plot
 ggsave(filename = "~/Documents/speedyCMI/figures/fig6-forest-plot-imp.png", 
-       plot = forest_plot, width = 8, height = 5)
+       plot = forest_plot, width = 10, height = 5)
 ```
