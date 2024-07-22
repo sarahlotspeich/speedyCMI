@@ -227,6 +227,33 @@ for (s in 1:nrow(sett_sp)) {
   sett_sp[s, c(8:10)] = sqrt(diag(vcov(fit)))
 }
 
+## Full cohort
+sett_fc = expand.grid(sim = 1:sims,
+                      n = c(500, 1000, 2500, 5000),
+                      censoring = c("light", "heavy"),
+                      alpha_fc = NA,
+                      beta_fc = NA,
+                      gamma_fc = NA,
+                      time_fc = NA,
+                      se_alpha_fc = NA,
+                      se_beta_fc = NA,
+                      se_gamma_fc = NA)
+for (s in 1:nrow(sett_fc)) {
+  # Generate data
+  set.seed(sett_fc$sim[s]) ## set seed = sim ID
+  dat = generate_data(n = sett_fc$n[s], ## Sample size
+                      censoring = sett_fc$censoring[s]) ## Censoring setting
+
+  ## Fit model to full cohort data
+  fit = lm(y ~ x + z, data = dat)
+
+  ## Save parameter estimates
+  sett_fc[s, c(4:6)] = fit$coefficients
+
+  ## Save standard error estimates
+  sett_fc[s, c(8:10)] = sqrt(diag(vcov(fit)))
+}
+
 # /////////////////////////////////////////////////////////////////////////
 # Combine and save simulation results from all methods ////////////////////
 # /////////////////////////////////////////////////////////////////////////
