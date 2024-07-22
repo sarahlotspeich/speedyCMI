@@ -12,7 +12,7 @@ sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyC
 
 # Create plot
 sett |>
-  dplyr::select(sim, n, censoring, dplyr::starts_with("beta")) |>
+  dplyr::select(sim, n, censoring, dplyr::starts_with("beta"), -dplyr::ends_with("fc")) |>
   tidyr::gather("integral", "beta", -c(1:3)) |>
   dplyr::mutate(n = factor(x = n,
                            levels = c(500, 1000, 2500, 5000),
@@ -31,7 +31,7 @@ sett |>
   geom_boxplot(alpha = 0.6) +
   geom_hline(yintercept = 0.5,
              linetype = 2) +
-  theme_minimal(base_size = 14) +
+  theme_bw(base_size = 14) +
   facet_grid(cols = vars(censoring)) +
   xlab("Sample Size") +
   ylab("Parameter Estimate") +
@@ -44,5 +44,5 @@ sett |>
   ggthemes::scale_color_colorblind(name = "Imputation\nApproach:") +
   guides(fill = guide_legend(ncol=1, byrow=TRUE),
          color = guide_legend(ncol=1, byrow=TRUE))
-ggsave(filename = "speedyCMI/figures/fig2-betas-single-imp.png",
+ggsave(filename = "speedyCMI/figures/figS2-betas-single-imp.png",
        device = "png", width = 10, height = 6, units = "in")
