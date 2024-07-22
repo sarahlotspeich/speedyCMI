@@ -34,7 +34,7 @@ sett |>
   geom_line() +
   geom_point(aes(y = med_time)) +
   geom_line(aes(y = med_time), linetype = 2) +
-  theme_minimal(base_size = 14) +
+  theme_bw(base_size = 14) +
   facet_grid(cols = vars(censoring)) +
   xlab(label = "Sample Size") +
   ylab("Average Per-Replicate Computing Time (in Seconds)") +
