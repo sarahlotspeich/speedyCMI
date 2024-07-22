@@ -19,7 +19,7 @@ generate_data = function(n, censoring = "light") {
   q = ifelse(test = censoring == "light",
              yes = 0.2, # ~ 20%
              no = ifelse(test = censoring == "heavy",
-                         yes = 0.4, # ~35%
+                         yes = 0.7, # ~50%
                          no = 1.67) # ~79%
   ) # Rate parameter for censoring
   c = rexp(n = n, rate = q) # Random censoring mechanism
@@ -204,10 +204,7 @@ for (s in 1:nrow(sett_sp)) {
 
   ## Impute censored covariates
   time_imp = system.time(
-    imp_dat <- cmi_sp(imputation_formula = Surv(time = w, event = d) ~ z,
-                      W = "w",
-                      Delta = "d",
-                      Z = "z",
+    imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z,
                       data = dat,
                       trapezoidal_rule = TRUE,
                       surv_between = "cf",
@@ -271,6 +268,10 @@ sett = sett_old |>
                                        n == n,
                                        censoring == censoring)) |>
   dplyr::left_join(sett_sp,
+                   by = dplyr::join_by(sim == sim,
+                                       n == n,
+                                       censoring == censoring)) |>
+  dplyr::left_join(sett_fc,
                    by = dplyr::join_by(sim == sim,
                                        n == n,
                                        censoring == censoring))
