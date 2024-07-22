@@ -17,7 +17,7 @@ devtools::install_github(repo = "sarahlotspeich/speedyCMI",
                          ref = "main")
 ```
 
-The package can then be loaded in the usual way.
+Once installed, the package can then be loaded in the usual way.
 
 ``` r
 # Load the package
