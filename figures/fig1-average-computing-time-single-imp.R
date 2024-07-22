@@ -11,7 +11,7 @@ sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyC
 
 # Create plot
 sett |>
-  dplyr::select(sim, n, censoring, dplyr::starts_with("time")) |>
+  dplyr::select(sim, n, censoring, dplyr::starts_with("time"), -dplyr::ends_with("fc")) |>
   tidyr::gather("integral", "time", -c(1:3)) |>
   dplyr::mutate(n = factor(x = n,
                            levels = c(500, 1000, 2500, 5000),
