@@ -106,8 +106,6 @@ lm(y ~ imp + z,
 # Single parametric CMI using the stabilized integral formula without mean
 imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
                             dist = "weibull",
-                            W = "w",
-                            Delta = "d",
                             data = dat, 
                             with_mean = FALSE)
 
@@ -130,8 +128,6 @@ lm(y ~ imp + z,
 # Single parametric CMI using the stabilized integral formula with mean
 imp_dat = cmi_fp_stabilized(imputation_formula = Surv(time = w, event = d) ~ z,
                             dist = "weibull",
-                            W = "w",
-                            Delta = "d",
                             data = dat, 
                             with_mean = TRUE)
 
@@ -154,8 +150,6 @@ lm(y ~ imp + z,
 # Single parametric CMI using the analytical solution
 imp_dat = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z,
                             dist = "weibull",
-                            W = "w",
-                            Delta = "d",
                             data = dat)
 
 ## Fit the analysis model to singly imputed data
@@ -184,8 +178,6 @@ to the `boots` argument.
 B = 20 ## Desired number of imputations 
 mult_imp = cmi_fp_analytical(imputation_formula = Surv(time = w, event = d) ~ z, 
                              dist = "weibull",
-                             W = "w", 
-                             Delta = "d", 
                              data = dat, 
                              boots = B) 
 
