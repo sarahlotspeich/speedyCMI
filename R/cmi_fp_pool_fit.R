@@ -1,40 +1,54 @@
-#' Fit and pool models fit to multiply imputed datasets
+#' Fit analysis model to each imputed dataset and pool the results using Rubin's rules
 #'
-#' Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.
+#' Fit analysis model to each imputed dataset and pool the results using Rubin's rules
 #'
-#' @param formula analysis model formula (or coercible to formula), a formula expression as for other regression models.
-#' @param family (optional) analysis model family, to be supplied to \code{glm()} to fit the model. Default is \code{family = gaussian}, but see \code{?family} for more options and details.
-#' @param imp_data A list of lists returned from one of the following functions: \code{cmi_fp_original()}, \code{cmi_fp_stabilized()}, or \code{cmi_fp_analytical()}.
+#' @param analysis_model imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
+#' @param imputed_data a list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions
 #'
-#' @return A dataframe of coefficient and standard error estimates
+#' @return A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
+
 #'
 #' @export
-
-cmi_fp_pool_fit = function(formula, family = gaussian, imp_data) {
+cmi_fp_pool_fit = function(analysis_model, imputed_data) {
   # Fit analysis model to each imputed dataset
   mult_fit = do.call(what = rbind,
-                     args = lapply(X = imp_data,
+                     args = lapply(X = mult_imp,
                                    FUN = function(l) {
-                                     summary(glm(formula = as.formula(formula),
-                                                 data = l$imputed_data,
-                                                 family = family))$coefficients
+                                     summary(lm(formula = as.formula(analysis_model),
+                                                data = l$imputed_data))$coefficients
                                    }
                      )
   )
 
-  # Separate coefficient and standard error estimates
-  imp_params = matrix(data = mult_fit[, 1],
-                      ncol = length(unique(rownames(mult_fit))),
-                      byrow = TRUE)
+  # Define the dimension of the coefficient vector
+  p = nrow(summary(lm(formula = as.formula(analysis_model),
+                      data = mult_imp[[1]]$imputed_data))$coefficients)
 
-  imp_vars = matrix(data = mult_fit[, 2] ^ 2,
-                    ncol = length(unique(rownames(mult_fit))),
-                    byrow = TRUE)
+  # Separate coefficient and variances estimates
+  beta_b = matrix(data = mult_fit[, 1],
+                  nrow = B,
+                  byrow = TRUE)
+  vbeta_b = matrix(data = mult_fit[, 2],
+                   nrow = B,
+                   byrow = TRUE)
 
-  # Build dataframe of pooled estimates
-  return_coeff = data.frame(Estimate = colMeans(imp_params),
-                            Standard.Error = sapply(X = 1:ncol(imp_vars),
-                                                    FUN = function(c) sqrt(mean(imp_vars[, c]) + (B + 1) * mean((imp_params[, c] - mean(imp_params[, c])) ^ 2))))
-  rownames(return_coeff) = unique(rownames(mult_fit))
-  return(return_coeff)
+  # Pool coefficient and variance estimates
+  beta_pooled = colMeans(beta_b)
+  beta_pooled_rep = matrix(data = beta_pooled,
+                           nrow = B,
+                           ncol = p,
+                           byrow = TRUE)
+  vbeta_within = colMeans(vbeta_b)
+  vbeta_between = colSums((beta_b - beta_pooled_rep) ^ 2) / (B - 1)
+  vbeta_pooled = vbeta_within + vbeta_between
+
+  # Create table of estimates
+  res = data.frame(Est = beta_pooled,
+                   SE = sqrt(vbeta_pooled))
+  res$t = res$Est / res$SE ## t-statistic
+  res$p = 2 * pnorm(q = abs(res$t), mean = 0, sd = 1, lower.tail = FALSE) ## two-sided p-value
+  rownames(res) = rownames(mult_fit[[1]]) ## take row names from one of the fits
+
+  # Return it
+  return(res)
 }

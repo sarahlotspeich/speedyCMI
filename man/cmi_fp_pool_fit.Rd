@@ -2,20 +2,18 @@
 % Please edit documentation in R/cmi_fp_pool_fit.R
 \name{cmi_fp_pool_fit}
 \alias{cmi_fp_pool_fit}
-\title{Fit and pool models fit to multiply imputed datasets}
+\title{Fit analysis model to each imputed dataset and pool the results using Rubin's rules}
 \usage{
-cmi_fp_pool_fit(formula, family = gaussian, imp_data)
+cmi_fp_pool_fit(analysis_model, imputed_data)
 }
 \arguments{
-\item{formula}{analysis model formula (or coercible to formula), a formula expression as for other regression models.}
+\item{analysis_model}{imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.}
 
-\item{family}{(optional) analysis model family, to be supplied to \code{glm()} to fit the model. Default is \code{family = gaussian}, but see \code{?family} for more options and details.}
-
-\item{imp_data}{A list of lists returned from one of the following functions: \code{cmi_fp_original()}, \code{cmi_fp_stabilized()}, or \code{cmi_fp_analytical()}.}
+\item{imputed_data}{a list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions}
 }
 \value{
-A dataframe of coefficient and standard error estimates
+A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
 }
 \description{
-Fully parametric conditional mean imputation for a right-censored covariate using an accelerated failure-time model to estimate the conditional survival function and then uses an analytical solution to compute conditional means.
+Fit analysis model to each imputed dataset and pool the results using Rubin's rules
 }
