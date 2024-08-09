@@ -3,13 +3,16 @@
 #' Fit analysis model to each imputed dataset and pool the results using Rubin's rules
 #'
 #' @param analysis_model imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
-#' @param imputed_data a list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions
+#' @param mult_imp a list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions
 #'
 #' @return A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
 
 #'
 #' @export
-cmi_fp_pool_fit = function(analysis_model, imputed_data) {
+cmi_fp_pool_fit = function(analysis_model, mult_imp) {
+  # Define the number of imputations
+  B = length(mult_imp)
+
   # Fit analysis model to each imputed dataset
   mult_fit = do.call(what = rbind,
                      args = lapply(X = mult_imp,
