@@ -47,7 +47,8 @@ cmi_fp_pool_fit = function(analysis_model, imputed_data) {
                    SE = sqrt(vbeta_pooled))
   res$t = res$Est / res$SE ## t-statistic
   res$p = 2 * pnorm(q = abs(res$t), mean = 0, sd = 1, lower.tail = FALSE) ## two-sided p-value
-  rownames(res) = rownames(mult_fit[[1]]) ## take row names from one of the fits
+  rownames(res) = rownames(summary(lm(formula = as.formula(analysis_model),
+                                      data = mult_imp[[1]]$imputed_data))$coefficients) ## take row names from one of the fits
 
   # Return it
   return(res)
