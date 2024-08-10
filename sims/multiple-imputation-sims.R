@@ -48,12 +48,15 @@ for (s in 1:nrow(sett_old)) {
   dat = generate_data(n = sett_old$n[s], ## Sample size
                       censoring = sett_old$censoring[s]) ## Censoring setting
 
+  # Number of imputations
+  B = sett_old$num_imps[s]
+
   ## Multiply impute censored covariates
   time_imp = system.time(
     mult_imp <- cmi_fp_original(imputation_model = Surv(time = w, event = d) ~ z,
                                 dist = "lognormal",
                                 data = dat,
-                                boots = sett_old$num_imps[s]
+                                boots = B
     )
   )
 
@@ -61,30 +64,25 @@ for (s in 1:nrow(sett_old)) {
   sett_old[s, 7] = time_imp[3]
 
   if(sett_old$num_imps[s] > 0) {
-    ## Fit analysis model to each imputed dataset
-    mult_fit = do.call(what = rbind,
-                       args = lapply(X = mult_imp,
-                                     FUN = function(l) {
-                                       summary(lm(formula = y ~ imp + z, data = l$imputed_data))$coefficients
-                                     }
-                       )
-    )
-
-    ## Pool estimates
-    ### Take sums of estimates and variances
-    sum_est_var = rowsum(x = mult_fit[, 1:2],
-                         group = rownames(mult_fit))
-    ### Divide by the number of imputations to get means
-    mean_est_var = sum_est_var / sett_old$num_imps[s]
+    ## Fit model to each imputed dataset and pool results
+    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
+                                 mu = mult_imp)
 
     ## Save parameter estimates
-    sett_old[s, c(4:6)] = mean_est_var[, 1]
+    sett_old[s, c(4:6)] = fit_pooled$Est
+
+    ## Save standard error estimates
+    sett_old[s, c(8:10)] = fit_pooled$SE
   } else {
     ## Fit model to imputed data
-    fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
+    fit = lm(y ~ imp + z,
+             data = mult_imp$imputed_data)
 
     ## Save parameter estimates
     sett_old[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_old[s, c(8:10)] = sqrt(diag(vcov(fit)))
   }
 }
 
@@ -117,30 +115,24 @@ for (s in 1:nrow(sett_new)) {
   sett_new[s, 7] = time_imp[3]
 
   if (sett_new$num_imps[s] > 0) {
-    ## Fit analysis model to each imputed dataset
-    mult_fit = do.call(what = rbind,
-                       args = lapply(X = mult_imp,
-                                     FUN = function(l) {
-                                       summary(lm(formula = y ~ imp + z, data = l$imputed_data))$coefficients
-                                     }
-                       )
-    )
-
-    ## Pool estimates
-    ### Take sums of estimates and variances
-    sum_est_var = rowsum(x = mult_fit[, 1:2],
-                         group = rownames(mult_fit))
-    ### Divide by the number of imputations to get means
-    mean_est_var = sum_est_var / sett_new$num_imps[s]
+    ## Fit model to each imputed dataset and pool results
+    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
+                                 mult_imp = mult_imp)
 
     ## Save parameter estimates
-    sett_new[s, c(4:6)] = mean_est_var[, 1]
+    sett_new[s, c(4:6)] = fit_pooled$Est
+
+    ## Save standard error estimates
+    sett_new[s, c(8:10)] = fit_pooled$SE
   } else {
     ## Fit model to imputed data
     fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
 
     ## Save parameter estimates
     sett_new[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_new[s, c(8:10)] = sqrt(diag(vcov(fit)))
   }
 }
 
@@ -174,30 +166,24 @@ for (s in 1:nrow(sett_new2)) {
   sett_new2[s, 7] = time_imp[3]
 
   if (sett_new2$num_imps[s] > 0) {
-    ## Fit analysis model to each imputed dataset
-    mult_fit = do.call(what = rbind,
-                       args = lapply(X = mult_imp,
-                                     FUN = function(l) {
-                                       summary(lm(formula = y ~ imp + z, data = l$imputed_data))$coefficients
-                                     }
-                       )
-    )
-
-    ## Pool estimates
-    ### Take sums of estimates and variances
-    sum_est_var = rowsum(x = mult_fit[, 1:2],
-                         group = rownames(mult_fit))
-    ### Divide by the number of imputations to get means
-    mean_est_var = sum_est_var / sett_new2$num_imps[s]
+    ## Fit model to each imputed dataset and pool results
+    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
+                                 mu = mult_imp)
 
     ## Save parameter estimates
-    sett_new2[s, c(4:6)] = mean_est_var[, 1]
+    sett_new2[s, c(4:6)] = fit_pooled$Est
+
+    ## Save standard error estimates
+    sett_new2[s, c(8:10)] = fit_pooled$SE
   } else {
     ## Fit model to imputed data
     fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
 
     ## Save parameter estimates
     sett_new2[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_new2[s, c(8:10)] = sqrt(diag(vcov(fit)))
   }
 }
 
@@ -229,30 +215,24 @@ for (s in 1:nrow(sett_analytical)) {
   sett_analytical[s, 7] = time_imp[3]
 
   if (sett_analytical$num_imps[s] > 0) {
-    ## Fit analysis model to each imputed dataset
-    mult_fit = do.call(what = rbind,
-                       args = lapply(X = mult_imp,
-                                     FUN = function(l) {
-                                       summary(lm(formula = y ~ imp + z, data = l$imputed_data))$coefficients
-                                     }
-                       )
-    )
-
-    ## Pool estimates
-    ### Take sums of estimates and variances
-    sum_est_var = rowsum(x = mult_fit[, 1:2],
-                         group = rownames(mult_fit))
-    ### Divide by the number of imputations to get means
-    mean_est_var = sum_est_var / sett_analytical$num_imps[s]
+    ## Fit model to each imputed dataset and pool results
+    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
+                                 mu = mult_imp)
 
     ## Save parameter estimates
-    sett_analytical[s, c(4:6)] = mean_est_var[, 1]
+    sett_analytical[s, c(4:6)] = fit_pooled$Est
+
+    ## Save standard error estimates
+    sett_analytical[s, c(8:10)] = fit_pooled$SE
   } else {
     ## Fit model to imputed data
     fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
 
     ## Save parameter estimates
     sett_analytical[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_analytical[s, c(8:10)] = sqrt(diag(vcov(fit)))
   }
 }
 
@@ -277,7 +257,7 @@ for (s in 1:nrow(sett_sp)) {
       imp_fit <- cmi_sp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
                                   analysis_model = y ~ imp + z,
                                   data = dat,
-                                  trapezoidal_rule = TRUE,
+                                  integral = "TR",
                                   surv_between = "cf",
                                   surv_beyond = "d",
                                   B = sett_sp$num_imps[s])
@@ -288,12 +268,15 @@ for (s in 1:nrow(sett_sp)) {
 
     ## Save parameter estimates
     sett_sp[s, c(4:6)] = imp_fit$Est
+
+    ## Save standard error estimates
+    sett_sp[s, c(8:10)] = imp_fit$SE
   } else {
     ## Impute censored covariates
     time_imp = system.time(
       imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z,
                         data = dat,
-                        trapezoidal_rule = TRUE,
+                        integral = "TR",
                         surv_between = "cf",
                         surv_beyond = "d")
     )
@@ -306,6 +289,9 @@ for (s in 1:nrow(sett_sp)) {
 
     ## Save parameter estimates
     sett_sp[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_sp[s, c(8:10)] = sqrt(diag(vcov(fit)))
   }
 }
 
