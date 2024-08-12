@@ -41,6 +41,9 @@ sett_old = expand.grid(sim = 1:sims,
                        beta_old = NA,
                        gamma_old = NA,
                        time_old = NA,
+                       se_alpha_old = NA,
+                       se_beta_old = NA,
+                       se_gamma_old = NA,
                        num_imps = c(0, 5, 10, 20, 40))
 for (s in 1:nrow(sett_old)) {
   # Generate data
@@ -94,6 +97,9 @@ sett_new = expand.grid(sim = 1:sims,
                        beta_new = NA,
                        gamma_new = NA,
                        time_new = NA,
+                       se_alpha_new = NA,
+                       se_beta_new = NA,
+                       se_gamma_new = NA,
                        num_imps = c(0, 5, 10, 20, 40))
 for (s in 1:nrow(sett_new)) {
   # Generate data
@@ -144,6 +150,9 @@ sett_new2 = expand.grid(sim = 1:sims,
                         beta_new2 = NA,
                         gamma_new2 = NA,
                         time_new2 = NA,
+                        se_alpha_new2 = NA,
+                        se_beta_new2 = NA,
+                        se_gamma_new2 = NA,
                         num_imps = c(0, 5, 10, 20, 40))
 for (s in 1:nrow(sett_new2)) {
   # Generate data
@@ -195,6 +204,9 @@ sett_analytical = expand.grid(sim = 1:sims,
                               beta_analytical = NA,
                               gamma_analytical = NA,
                               time_analytical = NA,
+                              se_alpha_analytical = NA,
+                              se_beta_analytical = NA,
+                              se_gamma_analytical = NA,
                               num_imps = c(0, 5, 10, 20, 40))
 for (s in 1:nrow(sett_analytical)) {
   # Generate data
@@ -244,6 +256,9 @@ sett_sp = expand.grid(sim = 1:sims,
                       beta_sp = NA,
                       gamma_sp = NA,
                       time_sp = NA,
+                      se_alpha_sp = NA,
+                      se_beta_sp = NA,
+                      se_gamma_sp = NA,
                       num_imps = c(0, 5, 10, 20, 40))
 for (s in 1:nrow(sett_sp)) {
   # Generate data
