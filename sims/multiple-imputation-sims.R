@@ -51,32 +51,16 @@ for (s in 1:nrow(sett_old)) {
   dat = generate_data(n = sett_old$n[s], ## Sample size
                       censoring = sett_old$censoring[s]) ## Censoring setting
 
-  # Number of imputations
-  B = sett_old$num_imps[s]
-
-  ## Multiply impute censored covariates
-  time_imp = system.time(
-    mult_imp <- cmi_fp_original(imputation_model = Surv(time = w, event = d) ~ z,
-                                dist = "lognormal",
-                                data = dat,
-                                boots = B
+  # Check for single imputation
+  if (sett_old$num_imps[s] == 0) {
+    ## Time singly imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_original(imputation_model = Surv(time = w, event = d) ~ z,
+                                  dist = "lognormal",
+                                  data = dat,
+                                  boots = 0
+      )
     )
-  )
-
-  ## Save computing time (for the imputations)
-  sett_old[s, 7] = time_imp[3]
-
-  if(sett_old$num_imps[s] > 0) {
-    ## Fit model to each imputed dataset and pool results
-    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
-                                 mu = mult_imp)
-
-    ## Save parameter estimates
-    sett_old[s, c(4:6)] = fit_pooled$Est
-
-    ## Save standard error estimates
-    sett_old[s, c(8:10)] = fit_pooled$SE
-  } else {
     ## Fit model to imputed data
     fit = lm(y ~ imp + z,
              data = mult_imp$imputed_data)
@@ -86,7 +70,26 @@ for (s in 1:nrow(sett_old)) {
 
     ## Save standard error estimates
     sett_old[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  } else {
+    ## Time multiply imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
+                                   dist = "lognormal",
+                                   analysis_model = y ~ imp + z,
+                                   data = dat,
+                                   type = "original",
+                                   B = sett_old$num_imps[s])
+    )
+
+    ## Save parameter estimates
+    sett_old[s, c(4:6)] = mult_imp$Est
+
+    ## Save standard error estimates
+    sett_old[s, c(8:10)] = mult_imp$SE
   }
+
+  ## Save computing time (for the imputations)
+  sett_old[s, 7] = time_imp[3]
 }
 
 ## Parametric (Stabilized Integral With Mean)
@@ -107,39 +110,45 @@ for (s in 1:nrow(sett_new)) {
   dat = generate_data(n = sett_new$n[s], ## Sample size
                       censoring = sett_new$censoring[s]) ## Censoring setting
 
-  ## Multiply impute censored covariates
-  time_imp = system.time(
-    mult_imp <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
-                                  dist = "lognormal",
-                                  data = dat,
-                                  with_mean = TRUE,
-                                  boots = sett_new$num_imps[s]
+  # Check for single imputation
+  if (sett_new$num_imps[s] == 0) {
+    ## Time singly imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
+                                    dist = "lognormal",
+                                    data = dat,
+                                    with_mean = TRUE,
+                                    boots = 0
+      )
     )
-  )
-
-  ## Save computing time (for the imputations)
-  sett_new[s, 7] = time_imp[3]
-
-  if (sett_new$num_imps[s] > 0) {
-    ## Fit model to each imputed dataset and pool results
-    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
-                                 mult_imp = mult_imp)
-
-    ## Save parameter estimates
-    sett_new[s, c(4:6)] = fit_pooled$Est
-
-    ## Save standard error estimates
-    sett_new[s, c(8:10)] = fit_pooled$SE
-  } else {
     ## Fit model to imputed data
-    fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
-
+    fit = lm(y ~ imp + z,
+             data = mult_imp$imputed_data)
     ## Save parameter estimates
     sett_new[s, c(4:6)] = fit$coefficients
 
     ## Save standard error estimates
     sett_new[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  } else {
+    ## Time multiply imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
+                                   dist = "lognormal",
+                                   analysis_model = y ~ imp + z,
+                                   data = dat,
+                                   type = "stabilized (with mean)",
+                                   B = sett_new$num_imps[s])
+    )
+
+    ## Save parameter estimates
+    sett_new[s, c(4:6)] = mult_imp$Est
+
+    ## Save standard error estimates
+    sett_new[s, c(8:10)] = mult_imp$SE
   }
+
+  ## Save computing time (for the imputations)
+  sett_new[s, 7] = time_imp[3]
 }
 
 ## Parametric (Stabilized Integral Without Mean)
@@ -160,40 +169,46 @@ for (s in 1:nrow(sett_new2)) {
   dat = generate_data(n = sett_new2$n[s], ## Sample size
                       censoring = sett_new2$censoring[s]) ## Censoring setting
 
-  ## Multiply impute censored covariates
-  time_imp = system.time(
-    mult_imp <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
-                                  dist = "lognormal",
-                                  data = dat,
-                                  with_mean = FALSE,
-                                  use_cumulative_hazard = TRUE,
-                                  boots = sett_new2$num_imps[s]
+  # Check for single imputation
+  if (sett_new2$num_imps[s] == 0) {
+    ## Time singly imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_stabilized(imputation_model = Surv(time = w, event = d) ~ z,
+                                    dist = "lognormal",
+                                    data = dat,
+                                    with_mean = FALSE,
+                                    use_cumulative_hazard = TRUE,
+                                    boots = 0
+      )
     )
-  )
-
-  ## Save computing time (for the imputations)
-  sett_new2[s, 7] = time_imp[3]
-
-  if (sett_new2$num_imps[s] > 0) {
-    ## Fit model to each imputed dataset and pool results
-    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
-                                 mu = mult_imp)
-
-    ## Save parameter estimates
-    sett_new2[s, c(4:6)] = fit_pooled$Est
-
-    ## Save standard error estimates
-    sett_new2[s, c(8:10)] = fit_pooled$SE
-  } else {
     ## Fit model to imputed data
-    fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
-
+    fit = lm(y ~ imp + z,
+             data = mult_imp$imputed_data)
     ## Save parameter estimates
     sett_new2[s, c(4:6)] = fit$coefficients
 
     ## Save standard error estimates
     sett_new2[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  } else {
+    ## Time multiply imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
+                                   dist = "lognormal",
+                                   analysis_model = y ~ imp + z,
+                                   data = dat,
+                                   type = "stabilized (without mean)",
+                                   B = sett_new2$num_imps[s])
+    )
+
+    ## Save parameter estimates
+    sett_new2[s, c(4:6)] = mult_imp$Est
+
+    ## Save standard error estimates
+    sett_new2[s, c(8:10)] = mult_imp$SE
   }
+
+  ## Save computing time (for the imputations)
+  sett_new2[s, 7] = time_imp[3]
 }
 
 ## Parametric (Analytical Solution)
@@ -214,38 +229,43 @@ for (s in 1:nrow(sett_analytical)) {
   dat = generate_data(n = sett_analytical$n[s], ## Sample size
                       censoring = sett_analytical$censoring[s]) ## Censoring setting
 
-  ## Multiply impute censored covariates
-  time_imp = system.time(
-    mult_imp <- cmi_fp_analytical(imputation_model = Surv(time = w, event = d) ~ z,
-                                  dist = "lognormal",
-                                  data = dat,
-                                  boots = sett_analytical$num_imps[s]
+  # Check for single imputation
+  if (sett_analytical$num_imps[s] == 0) {
+    ## Time singly imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_analytical(imputation_model = Surv(time = w, event = d) ~ z,
+                                    dist = "lognormal",
+                                    data = dat,
+                                    boots = 0)
     )
-  )
-
-  ## Save computing time (for the imputations)
-  sett_analytical[s, 7] = time_imp[3]
-
-  if (sett_analytical$num_imps[s] > 0) {
-    ## Fit model to each imputed dataset and pool results
-    fit_pooled = cmi_fp_pool_fit(analysis_model = y ~ imp + z,
-                                 mu = mult_imp)
-
-    ## Save parameter estimates
-    sett_analytical[s, c(4:6)] = fit_pooled$Est
-
-    ## Save standard error estimates
-    sett_analytical[s, c(8:10)] = fit_pooled$SE
-  } else {
     ## Fit model to imputed data
-    fit = lm(y ~ imp + z, data = mult_imp$imputed_data)
-
+    fit = lm(y ~ imp + z,
+             data = mult_imp$imputed_data)
     ## Save parameter estimates
     sett_analytical[s, c(4:6)] = fit$coefficients
 
     ## Save standard error estimates
     sett_analytical[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  } else {
+    ## Time multiply imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
+                                   dist = "lognormal",
+                                   analysis_model = y ~ imp + z,
+                                   data = dat,
+                                   type = "analytical",
+                                   B = sett_analytical$num_imps[s])
+    )
+
+    ## Save parameter estimates
+    sett_analytical[s, c(4:6)] = mult_imp$Est
+
+    ## Save standard error estimates
+    sett_analytical[s, c(8:10)] = mult_imp$SE
   }
+
+  ## Save computing time (for the imputations)
+  sett_analytical[s, 7] = time_imp[3]
 }
 
 ## Semiparametric
