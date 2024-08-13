@@ -6,6 +6,8 @@
 #' @param dist Imputation model distribution passed through to \code{survreg}. See \code{survreg} documentation for more details.
 #' @param analysis_model Analysis model formula (or coercible to formula), a formula expression as for other regression models. The response should be a continuous outcome for normal linear regression.
 #' @param data Dataframe or named matrix containing columns \code{W}, \code{Delta}, and \code{Z}.
+#' @param nintervals (only if \code{dist = "PWE"}) integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.
+#' @param breaks (only if \code{dist = "PWE"}) vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.
 #' @param type String name of the type of imputation procedure to be used. Options include \code{"original"} (the default), \code{"analytical"}, \code{"stabilized (with mean)"}, and \code{"stabilized (without mean)"}.
 #' @param B numeric, number of imputations. Default is \code{10}.
 #'
@@ -14,7 +16,7 @@
 #'
 #' @export
 
-cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, type = "original", B = 10) {
+cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, nintervals = NULL, breaks = NULL, type = "original", B = 10) {
   # Size of resample -----------------------------------------------------------
   n = nrow(data)
 

@@ -9,6 +9,8 @@ cmi_fp_bootstrap(
   dist,
   analysis_model,
   data,
+  nintervals = NULL,
+  breaks = NULL,
   type = "original",
   B = 10
 )
@@ -21,6 +23,10 @@ cmi_fp_bootstrap(
 \item{analysis_model}{Analysis model formula (or coercible to formula), a formula expression as for other regression models. The response should be a continuous outcome for normal linear regression.}
 
 \item{data}{Dataframe or named matrix containing columns \code{W}, \code{Delta}, and \code{Z}.}
+
+\item{nintervals}{(only if \code{dist = "PWE"}) integer, number of disjoint subintervals used to split the hazard function of \code{W}. Must specify either this or \code{breaks}.}
+
+\item{breaks}{(only if \code{dist = "PWE"}) vector, fixed subinterval boundaries used to split the hazard function of \code{W}. Must specify either this or \code{nintervals}.}
 
 \item{type}{String name of the type of imputation procedure to be used. Options include \code{"original"} (the default), \code{"analytical"}, \code{"stabilized (with mean)"}, and \code{"stabilized (without mean)"}.}
 
