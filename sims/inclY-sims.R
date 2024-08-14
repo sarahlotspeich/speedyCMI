@@ -1,0 +1,197 @@
+# Install package
+# Run once:
+# devtools::install_github(repo = "sarahlotspeich/SpeedyCMI")
+# devtools::install_github(repo = "sarahlotspeich/imputeCensRd")
+
+# Load packages
+library(imputeCensRd) ## to impute (semiparametric)
+library(speedyCMI) ## to impute (parametric)
+library(ggplot2) ## to plot results
+
+# /////////////////////////////////////////////////////////////////////////
+# Data generation function for all simulations ////////////////////////////
+# /////////////////////////////////////////////////////////////////////////
+generate_data = function(n, censoring = "light") {
+  z = rbinom(n = n, size = 1, prob = 0.5) # Uncensored covariate
+  x = rlnorm(n = n, meanlog = 0 + 0.05 * z, sdlog = 0.5) # To-be-censored covariate
+  e = rnorm(n = n, mean = 0, sd = 1) # Random errors
+  y = 1 + 0.5 * x + 0.25 * z + e # Continuous outcome
+  q = ifelse(test = censoring == "light",
+             yes = 0.2, # ~ 20%
+             no = ifelse(test = censoring == "heavy",
+                         yes = 0.7, # ~50%
+                         no = 1.67) # ~79%
+  ) # Rate parameter for censoring
+  c = rexp(n = n, rate = q) # Random censoring mechanism
+  w = pmin(x, c) # Observed covariate value
+  d = as.numeric(x <= c) # "Event" indicator
+  dat = data.frame(x, z, w, y, d) # Construct data set
+  return(dat)
+}
+sims = 1000 ## number of simulated replicates
+
+# /////////////////////////////////////////////////////////////////////////
+# Simulations using each CMI approach /////////////////////////////////////
+# /////////////////////////////////////////////////////////////////////////
+## Parametric (Analytical Solution)
+sett_analytical = expand.grid(sim = 1:sims,
+                              n = 1000,
+                              censoring = "heavy",
+                              alpha_analytical = NA,
+                              beta_analytical = NA,
+                              gamma_analytical = NA,
+                              time_analytical = NA,
+                              se_alpha_analytical = NA,
+                              se_beta_analytical = NA,
+                              se_gamma_analytical = NA,
+                              num_imps = c(0, 5, 10, 20, 40))
+for (s in 1:nrow(sett_analytical)) {
+  # Generate data
+  set.seed(sett_analytical$sim[s]) ## set seed = sim ID
+  dat = generate_data(n = sett_analytical$n[s], ## Sample size
+                      censoring = sett_analytical$censoring[s]) ## Censoring setting
+
+  # Check for single imputation
+  if (sett_analytical$num_imps[s] == 0) {
+    ## Time singly imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_analytical(imputation_model = Surv(time = w, event = d) ~ z + y,
+                                    dist = "lognormal",
+                                    data = dat,
+                                    boots = 0)
+    )
+    ## Fit model to imputed data
+    fit = lm(y ~ imp + z,
+             data = mult_imp$imputed_data)
+    ## Save parameter estimates
+    sett_analytical[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_analytical[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  } else {
+    ## Time multiply imputing censored covariates
+    time_imp = system.time(
+      mult_imp <- cmi_fp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z + y,
+                                   dist = "lognormal",
+                                   analysis_model = y ~ imp + z,
+                                   data = dat,
+                                   type = "analytical",
+                                   B = sett_analytical$num_imps[s])
+    )
+
+    ## Save parameter estimates
+    sett_analytical[s, c(4:6)] = mult_imp$Est
+
+    ## Save standard error estimates
+    sett_analytical[s, c(8:10)] = mult_imp$SE
+  }
+
+  ## Save computing time (for the imputations)
+  sett_analytical[s, 7] = time_imp[3]
+}
+
+## Semiparametric
+sett_sp = expand.grid(sim = 1:sims,
+                      n = 1000,
+                      censoring = "heavy",
+                      alpha_sp = NA,
+                      beta_sp = NA,
+                      gamma_sp = NA,
+                      time_sp = NA,
+                      se_alpha_sp = NA,
+                      se_beta_sp = NA,
+                      se_gamma_sp = NA,
+                      num_imps = c(0, 5, 10, 20, 40))
+for (s in 1:nrow(sett_sp)) {
+  # Generate data
+  set.seed(sett_sp$sim[s]) ## set seed = sim ID
+  dat = generate_data(n = sett_sp$n[s], ## Sample size
+                      censoring = sett_sp$censoring[s]) ## Censoring setting
+
+  if (sett_sp$num_imps[s] > 0) {
+    ## Multiply impute censored covariates
+    time_imp = system.time(
+      imp_fit <- cmi_sp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z + y,
+                                  analysis_model = y ~ imp + z,
+                                  data = dat,
+                                  integral = "TR",
+                                  surv_between = "cf",
+                                  surv_beyond = "d",
+                                  B = sett_sp$num_imps[s])
+    )
+
+    ## Save computing time
+    sett_sp[s, 7] = time_imp[3]
+
+    ## Save parameter estimates
+    sett_sp[s, c(4:6)] = imp_fit$Est
+
+    ## Save standard error estimates
+    sett_sp[s, c(8:10)] = imp_fit$SE
+  } else {
+    ## Impute censored covariates
+    time_imp = system.time(
+      imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z + y,
+                        data = dat,
+                        integral = "TR",
+                        surv_between = "cf",
+                        surv_beyond = "d")
+    )
+
+    ## Save computing time
+    sett_sp[s, 7] = time_imp[3]
+
+    ## Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+
+    ## Save parameter estimates
+    sett_sp[s, c(4:6)] = fit$coefficients
+
+    ## Save standard error estimates
+    sett_sp[s, c(8:10)] = sqrt(diag(vcov(fit)))
+  }
+}
+
+## Full cohort
+sett_fc = expand.grid(sim = 1:sims,
+                      n = c(500, 1000, 2500, 5000),
+                      censoring = c("light", "heavy"),
+                      alpha_fc = NA,
+                      beta_fc = NA,
+                      gamma_fc = NA,
+                      time_fc = NA,
+                      se_alpha_fc = NA,
+                      se_beta_fc = NA,
+                      se_gamma_fc = NA)
+for (s in 1:nrow(sett_fc)) {
+  # Generate data
+  set.seed(sett_fc$sim[s]) ## set seed = sim ID
+  dat = generate_data(n = sett_fc$n[s], ## Sample size
+                      censoring = sett_fc$censoring[s]) ## Censoring setting
+
+  ## Fit model to full cohort data
+  fit = lm(y ~ x + z, data = dat)
+
+  ## Save parameter estimates
+  sett_fc[s, c(4:6)] = fit$coefficients
+
+  ## Save standard error estimates
+  sett_fc[s, c(8:10)] = sqrt(diag(vcov(fit)))
+}
+
+# /////////////////////////////////////////////////////////////////////////
+# Combine and save simulation results from all methods ////////////////////
+# /////////////////////////////////////////////////////////////////////////
+sett = sett_analytical |>
+  dplyr::left_join(sett_sp,
+                   by = dplyr::join_by(sim == sim,
+                                       n == n,
+                                       censoring == censoring,
+                                       num_imps == num_imps)) |>
+  dplyr::left_join(sett_fc,
+                   by = dplyr::join_by(sim == sim,
+                                       n == n,
+                                       censoring == censoring))
+sett |>
+  write.csv("~/Documents/speedyCMI/sims/inclY.csv",
+            row.names = F)
