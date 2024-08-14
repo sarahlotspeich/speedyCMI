@@ -11,7 +11,7 @@ sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyC
 
 # Create plot
 sett |>
-  dplyr::select(sim, num_imps, censoring, dplyr::starts_with("time")) |>
+  dplyr::select(sim, num_imps, censoring, dplyr::starts_with("time"), -time_fc) |>
   tidyr::gather("integral", "time", -c(1:3)) |>
   dplyr::mutate(num_imps = factor(x = num_imps,
                                   levels = c(0, 5, 10, 20, 40),
@@ -41,5 +41,5 @@ sett |>
   ggthemes::scale_color_colorblind(name = "Imputation\nApproach:") +
   guides(color = guide_legend(ncol=1, byrow=TRUE))
 
-ggsave(filename = "speedyCMI/figures/figS2-total-computing-time-multiple-imp.png",
+ggsave(filename = "speedyCMI/figures/figS3-total-computing-time-multiple-imp.png",
        device = "png", width = 10, height = 6, units = "in")
