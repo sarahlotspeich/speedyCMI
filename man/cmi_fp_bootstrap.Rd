@@ -33,7 +33,10 @@ cmi_fp_bootstrap(
 \item{B}{numeric, number of imputations. Default is \code{10}.}
 }
 \value{
-A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
+A list containing:
+\item{coeff}{dataframe containing the pooled coefficients and standard errors for \code{analysis_model}}
+\item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit to the original data.}
+\item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit to the original data.}
 }
 \description{
 Multiple, parametric conditional mean imputation for a censored covariate using parametric survival regression to estimate the conditional survival function.

@@ -11,8 +11,11 @@
 #' @param type String name of the type of imputation procedure to be used. Options include \code{"original"} (the default), \code{"analytical"}, \code{"stabilized (with mean)"}, and \code{"stabilized (without mean)"}.
 #' @param B numeric, number of imputations. Default is \code{10}.
 #'
-#' @return A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
-
+#' @return A list containing:
+#' \item{coeff}{dataframe containing the pooled coefficients and standard errors for \code{analysis_model}}
+#' \item{aic}{Akaike information criterion (AIC) from the \code{imputation_model} fit to the original data.}
+#' \item{bic}{Bayesian information criterion (AIC) from the \code{imputation_model} fit to the original data.}
+#'
 #'
 #' @export
 
@@ -52,6 +55,8 @@ cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, ninter
         re_data_imp = cmi_fp_analytical(imputation_model = imputation_model,
                                         dist = dist,
                                         data = re_data,
+                                        nintervals = nintervals,
+                                        breaks = breaks,
                                         boots = 0)
       } else if (type == "stabilized (with mean)") {
         re_data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
@@ -107,5 +112,35 @@ cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, ninter
   tab = data.frame(Coefficient = names(naive_fit$coefficients),
                    Est = pooled_est,
                    SE = sqrt(pooled_var))
-  return(tab)
+
+  # Fit imputation model to original data to get model diagnostics
+  # Impute censored x in re_data -------------------------------------------
+  if (type == "analytical") {
+    data_imp = cmi_fp_analytical(imputation_model = imputation_model,
+                                 dist = dist,
+                                 data = data,
+                                 boots = 0)
+  } else if (type == "stabilized (with mean)") {
+    data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
+                                 dist = dist,
+                                 data = data,
+                                 with_mean = TRUE,
+                                 boots = 0)
+  } else if (type == "stabilized (without mean)") {
+    data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
+                                 dist = dist,
+                                 data = data,
+                                 with_mean = FALSE,
+                                 use_cumulative_hazard = TRUE,
+                                 boots = 0)
+  } else {
+    data_imp = cmi_fp_original(imputation_model = imputation_model,
+                               dist = dist,
+                               data = data,
+                               boots = 0)
+  }
+
+  return(list(coeff = tab,
+              aic = data_imp$aic,
+              bic = data_imp$bic))
 }
