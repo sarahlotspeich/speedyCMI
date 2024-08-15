@@ -200,6 +200,8 @@ lognorm_bic
 lognorm_plot = lognorm_imp |> 
   density_plot(title = "Log-Normal Imputation Model")
 lognorm_plot
+### Median time to hypertension (imputed)
+median(lognorm_imp$imputed_data$imp[lognorm_imp$imputed_data$HYPERTEN == 0])
 ```
 
 ### (iv) Log-Logistic Distribution
@@ -295,7 +297,7 @@ all_plot = weib_imp$imputed_data |>
                                   labels = c("Diagnosed (Uncensored)", "Undiagnosed (Censored)"))) |> 
   ggplot(aes(x = imp, fill = HYPERTEN)) + 
   geom_density(alpha = 0.7) + 
-  geom_vline(xintercept = 25, linetype = 2) + 
+  geom_vline(xintercept = 24, linetype = 2) + ## max observed uncensored value
   ggthemes::scale_fill_colorblind(name = "Patient Status:") +
   theme_minimal(base_size = 14) +
   theme(legend.position = "top", 
@@ -327,11 +329,13 @@ forest_dat = coefficients(summary(naive_fit)) |>
   dplyr::mutate(Coefficient = rownames(coefficients(summary(naive_fit))),
                 Method = "Naive Analysis") |> 
   dplyr::inner_join(
-    confint(naive_fit) |> 
+    confint(naive_fit) |>
       data.frame() |> 
       dplyr::mutate(Coefficient = rownames(confint(naive_fit))) |> 
       magrittr::set_colnames(c("LB", "UB", "Coefficient"))
-  )
+  ) |> 
+  dplyr::select(-t.value, -Pr...t..) |> 
+  dplyr::rename(SE = Std..Error)
 ```
 
   -   Higher systolic blood pressures at first visit were associated with higher systolic blood pressures at last visit. On average, for every 1 mmHg higher a patient's systolic blood pressure was at first visit, their systolic blood pressure was expected to be `r round(naive_fit$coefficients[2], 3)` mmHg *higher* at last visit.
@@ -350,15 +354,17 @@ cc_fit = lm(SYSBP1 ~ SYSBP0 + TIMEHYP + SEX + AGE0 + BMI0,
 knitr::kable(coefficients(summary(cc_fit)), digits = 3)
 knitr::kable(confint(cc_fit), digits = 3)
 forest_dat = coefficients(summary(cc_fit)) |> 
-  data.frame() |> 
+  data.frame() |>
   dplyr::mutate(Coefficient = rownames(coefficients(summary(cc_fit))),
                 Method = "Complete Case Analysis") |> 
   dplyr::inner_join(
     confint(cc_fit) |> 
-      data.frame() |> 
+      data.frame() |>
       dplyr::mutate(Coefficient = rownames(confint(cc_fit))) |> 
       magrittr::set_colnames(c("LB", "UB", "Coefficient"))
   ) |> 
+  dplyr::select(-t.value, -Pr...t..) |> 
+  dplyr::rename(SE = Std..Error) |> 
   dplyr::bind_rows(forest_dat)
 ```
 
@@ -372,34 +378,41 @@ forest_dat = coefficients(summary(cc_fit)) |>
 ```{r}
 set.seed(333)
 ## Fit analysis model to each imputed dataset
+lognorm_fit = cmi_fp_bootstrap(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
+                               dist = "lognormal", 
+                               analysis_model = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, 
+                               data = to_analyze, 
+                               type = "analytical", 
+                               B = 200)
+lognorm_fit$Coefficient[3] = "TIMEHYP"
+forest_dat = lognorm_fit |>
+  dplyr::rename(Estimate = Est) |> 
+  dplyr::mutate(Method = "Multiple Imputation Analysis", 
+                LB = Estimate - 1.96 * SE, 
+                UB = Estimate + 1.96 * SE) |>
+  dplyr::bind_rows(forest_dat)
+```
+
+### Single Imputation Analysis
+
+```{r}
+set.seed(333)
+## Fit analysis model to each imputed dataset
 lognorm_imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0, 
                                 dist = "lognormal", 
                                 data = to_analyze, 
-                                boots = 20)
-mult_fit = do.call(what = rbind,
-                   args = lapply(X = lognorm_imp,
-                                 FUN = function(l) {
-                                   summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, data = l$imputed_data))$coefficients
-                                 }
-                   )
-)
-
-## Pool estimates
-### Take sums of estimates and variances
-sum_est_var = rowsum(x = mult_fit[, 1:2],
-                     group = rownames(mult_fit))
-### Divide by the number of imputations to get means
-mean_est_var = sum_est_var / 20
-
-## Save parameter estimates
-mean_est_var
-rownames(mean_est_var)[4] = "TIMEHYP"
-forest_dat = mean_est_var |>
+                                boots = 0)
+lognorm_fit = coefficients(summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, 
+                                      data = lognorm_imp$imputed_data)))
+rownames(lognorm_fit)[3] = "TIMEHYP"
+forest_dat = lognorm_fit |>
   data.frame() |> 
-  dplyr::mutate(Coefficient = rownames(mean_est_var),
-                Method = "Multiple Imputation Analysis", 
-                LB = Estimate - 1.96 * Std..Error, 
-                UB = Estimate + 1.96 * Std..Error) |>
+  dplyr::rename(SE = Std..Error) |> 
+  dplyr::mutate(Coefficient = rownames(lognorm_fit),
+                Method = "Single Imputation Analysis", 
+                LB = Estimate - 1.96 * SE, 
+                UB = Estimate + 1.96 * SE) |>
+  dplyr::select(-t.value, -Pr...t..) |> 
   dplyr::bind_rows(forest_dat)
 ```
 
@@ -408,8 +421,10 @@ forest_dat = mean_est_var |>
 ```{r, fig.width = 8, fig.height = 6, echo = FALSE}
 forest_plot = forest_dat |> 
   dplyr::mutate(Method = factor(x = Method, 
-                                levels = c("Naive Analysis", "Multiple Imputation Analysis", "Complete Case Analysis")),#, 
-                                #labels = c("Naive\nAnalysis", "MLE\nAnalysis", "Complete\nCase\nAnalysis")),
+                                levels = c("Naive Analysis", "Multiple Imputation Analysis", 
+                                           "Single Imputation Analysis", "Complete Case Analysis"), 
+                                labels = c("Naive\nAnalysis", "Multiple\nImputation\nAnalysis",
+                                           "Single\nImputation\nAnalysis", "Complete\nCase\nAnalysis")),
                 Coefficient = factor(x = Coefficient, 
                                      levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
                                                 "SEXFEMALE", "AGE0", "BMI0"), 
@@ -425,7 +440,7 @@ forest_plot = forest_dat |>
   theme_minimal(base_size = 14) +
   facet_wrap(~Coefficient, scales = "free") + 
   ggthemes::scale_color_colorblind(name = "Method:") + 
-  theme(legend.position = "top",
+  theme(legend.position = "right",
         legend.title = element_text(face = "bold"),
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white"),
@@ -447,33 +462,19 @@ for (d in c("lognormal", "weibull", "exponential", "loglogistic", "pwe")) {
   imp = cmi_fp_analytical(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ FEMALE + AGE0 + BMI0 + SYSBP0, 
                           dist = d, 
                           data = to_analyze, 
-                          boots = 20,
+                          boots = 200,
                           nintervals = 10)
-  mult_fit = do.call(what = rbind,
-                     args = lapply(X = imp,
-                                   FUN = function(l) {
-                                     summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, data = l$imputed_data))$coefficients
-                                   }
-                     )
-  )
-  
-  ## Pool estimates
-  ### Take sums of estimates and variances
-  sum_est_var = rowsum(x = mult_fit[, 1:2],
-                       group = rownames(mult_fit))
-  ### Divide by the number of imputations to get means
-  mean_est_var = sum_est_var / 20
-  
-  ## Save parameter estimates
-  mean_est_var
-  rownames(mean_est_var)[4] = "TIMEHYP"
-  forest_dat = mean_est_var |>
+  fit = cmi_fp_pool_fit(analysis_model = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0,
+                              mult_imp = imp)
+  rownames(fit)[3] = "TIMEHYP"
+  forest_dat = fit |>
     data.frame() |> 
-    dplyr::mutate(Coefficient = rownames(mean_est_var),
+    dplyr::mutate(Estimate = Est, 
+                  Coefficient = rownames(lognorm_fit),
                   Method = toupper(d), 
-                  LB = Estimate - 1.96 * Std..Error, 
-                  UB = Estimate + 1.96 * Std..Error) |>
-    dplyr::bind_rows(forest_dat)  
+                  LB = Est - 1.96 * SE, 
+                  UB = Est + 1.96 * SE) |>
+    dplyr::bind_rows(forest_dat)
 }
 ```
 
