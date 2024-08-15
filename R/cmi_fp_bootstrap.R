@@ -119,7 +119,9 @@ cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, ninter
     data_imp = cmi_fp_analytical(imputation_model = imputation_model,
                                  dist = dist,
                                  data = data,
-                                 boots = 0)
+                                 boots = 0,
+                                 nintervals = nintervals,
+                                 breaks = breaks)
   } else if (type == "stabilized (with mean)") {
     data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
                                  dist = dist,
