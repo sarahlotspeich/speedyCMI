@@ -1,8 +1,8 @@
 #############################################################################################
-# Create FIGURE 4 from the manuscript, with caption "Estimates of $\beta_1$,
-## the parameter on the censored covariate $X$ in the linear regression analysis
-## model, resulting from each imputation approach with an increasing number of
-## imputations $B$. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$.
+# Create FIGURE S4 from the manuscript, with caption "Estimates of $\beta_1$, the parameter #
+# on the censored covariate $X$ in the linear regression analysis model, resulting from #####
+# each imputation approach with an increasing number of imputations $B$. The horizontal #####
+# dashed line denotes the true value of $\beta_1 = 0.5$. ####################################
 #############################################################################################
 
 # Load packages
