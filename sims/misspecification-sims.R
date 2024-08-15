@@ -210,5 +210,5 @@ sett = sett_lognorm |>
                    by = dplyr::join_by(sim == sim))
 
 sett |>
-  write.csv("speedyCMI/sims/misclassification-sims.csv",
+  write.csv("speedyCMI/sims/misspecification-sims.csv",
             row.names = F)
