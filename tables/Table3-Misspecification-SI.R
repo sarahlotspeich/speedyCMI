@@ -13,8 +13,7 @@ library(kableExtra) # To format pretty tables
 
 # Read in simulation results
 ## Full cohort and semiparametric multiple imputation
-oth_res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/multiple-imputation-sims.csv") |>
-  filter(num_imps == 10) |> ## subset to B = 10 imputations
+oth_res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/single-imputation-sims.csv") |>
   select(sim, ends_with(c("fc", "sp")), -starts_with("time")) ## keep only relevant columns
 oth_res_summ = oth_res |>
   dplyr::summarize(bias_fc = mean(beta_fc - 0.5),
@@ -30,7 +29,7 @@ oth_res_summ = oth_res |>
          re_sp = ese_fc ^ 2 / ese_sp ^ 2,
          mid1 = "", mid2 = "", mid3 = "")
 ## Parametric multiple imputation
-res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv") |>
+res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-si.csv") |>
   select(sim, starts_with(c("beta", "se_beta"))) |>
   pivot_longer(cols = starts_with(c("beta", "se_beta")),
                names_to = "distribution",
