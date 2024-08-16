@@ -14,7 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(riskCommunicator) ## for the Framingham teaching data
 library(tableone) ## for Table 1
 library(ggplot2) ## for pretty plots
-library(speedyCMI) ## for imputation methods
+library(speedyCMI) ## for parametric imputation methods
+library(imputeCensRd) ## for semiparametric imputation method
 ```
 
 ## Data
@@ -375,6 +376,8 @@ forest_dat = coefficients(summary(cc_fit)) |>
 
 ### Multiple Imputation Analysis
 
+#### Parametric 
+
 ```{r}
 set.seed(333)
 ## Fit analysis model to each imputed dataset
@@ -383,17 +386,38 @@ lognorm_fit = cmi_fp_bootstrap(imputation_model = Surv(time = TIMEHYP, event = H
                                analysis_model = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, 
                                data = to_analyze, 
                                type = "analytical", 
-                               B = 200)
-lognorm_fit$Coefficient[3] = "TIMEHYP"
-forest_dat = lognorm_fit |>
+                               B = 10)
+lognorm_fit$coeff$Coefficient[3] = "TIMEHYP"
+forest_dat = lognorm_fit$coeff |>
   dplyr::rename(Estimate = Est) |> 
-  dplyr::mutate(Method = "Multiple Imputation Analysis", 
+  dplyr::mutate(Method = "Multiple Parametric CMI", 
                 LB = Estimate - 1.96 * SE, 
                 UB = Estimate + 1.96 * SE) |>
   dplyr::bind_rows(forest_dat)
 ```
 
 ### Single Imputation Analysis
+
+```{r}
+set.seed(333)
+## Fit analysis model to each imputed dataset
+lognorm_imp = cmi_sp_bootstrap(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0,
+                               analysis_model = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0,
+                               data = to_analyze,
+                               integral = "tr",
+                               surv_between = "cf",
+                               surv_beyond = "d", 
+                               B = 10)
+lognorm_imp$Coefficient[3] = "TIMEHYP"
+forest_dat = lognorm_imp |>
+  dplyr::rename(Estimate = Est) |> 
+  dplyr::mutate(Method = "Multiple Semiparametric CMI", 
+                LB = Estimate - 1.96 * SE, 
+                UB = Estimate + 1.96 * SE) |>
+  dplyr::bind_rows(forest_dat)
+```
+
+#### Parametric 
 
 ```{r}
 set.seed(333)
@@ -409,7 +433,31 @@ forest_dat = lognorm_fit |>
   data.frame() |> 
   dplyr::rename(SE = Std..Error) |> 
   dplyr::mutate(Coefficient = rownames(lognorm_fit),
-                Method = "Single Imputation Analysis", 
+                Method = "Single Parametric CMI", 
+                LB = Estimate - 1.96 * SE, 
+                UB = Estimate + 1.96 * SE) |>
+  dplyr::select(-t.value, -Pr...t..) |> 
+  dplyr::bind_rows(forest_dat)
+```
+
+#### Semiparametric 
+
+```{r}
+set.seed(333)
+## Fit analysis model to each imputed dataset
+lognorm_imp = cmi_sp(imputation_model = Surv(time = TIMEHYP, event = HYPERTEN) ~ SEX + AGE0 + BMI0 + SYSBP0,
+                     data = to_analyze,
+                     integral = "tr",
+                     surv_between = "cf",
+                     surv_beyond = "d")
+lognorm_fit = coefficients(summary(lm(formula = SYSBP1 ~ SYSBP0 + imp + SEX + AGE0 + BMI0, 
+                                      data = lognorm_imp$imputed_data)))
+rownames(lognorm_fit)[3] = "TIMEHYP"
+forest_dat = lognorm_fit |>
+  data.frame() |> 
+  dplyr::rename(SE = Std..Error) |> 
+  dplyr::mutate(Coefficient = rownames(lognorm_fit),
+                Method = "Single Semiparametric CMI", 
                 LB = Estimate - 1.96 * SE, 
                 UB = Estimate + 1.96 * SE) |>
   dplyr::select(-t.value, -Pr...t..) |> 
@@ -418,13 +466,17 @@ forest_dat = lognorm_fit |>
 
 ### Comparing Methods 
 
-```{r, fig.width = 8, fig.height = 6, echo = FALSE}
+```{r, fig.width = 10, fig.height = 6, echo = FALSE}
 forest_plot = forest_dat |> 
   dplyr::mutate(Method = factor(x = Method, 
-                                levels = c("Naive Analysis", "Multiple Imputation Analysis", 
-                                           "Single Imputation Analysis", "Complete Case Analysis"), 
-                                labels = c("Naive\nAnalysis", "Multiple\nImputation\nAnalysis",
-                                           "Single\nImputation\nAnalysis", "Complete\nCase\nAnalysis")),
+                                levels = c("Complete Case Analysis", 
+                                           "Single Parametric CMI", "Multiple Parametric CMI", 
+                                           "Single Semiparametric CMI","Multiple Semiparametric CMI", 
+                                           "Naive Analysis"), 
+                                labels = c("Complete Case\nAnalysis", 
+                                           "Parametric\nCMI (Single)", "Parametric\nCMI (Multiple)", 
+                                           "Semiparametric\nCMI (Single)","Semiparametric\nCMI (Multiple)", 
+                                           "Naive\nAnalysis")),
                 Coefficient = factor(x = Coefficient, 
                                      levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
                                                 "SEXFEMALE", "AGE0", "BMI0"), 
@@ -440,21 +492,35 @@ forest_plot = forest_dat |>
   theme_minimal(base_size = 14) +
   facet_wrap(~Coefficient, scales = "free") + 
   ggthemes::scale_color_colorblind(name = "Method:") + 
-  theme(legend.position = "right",
+  theme(legend.position = "top",
         legend.title = element_text(face = "bold"),
+        legend.spacing.y = unit(5, 'cm'),
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white"),
         axis.title = element_text(face = "bold"), 
         axis.text.x = element_blank(), 
-        axis.title.x = element_blank())
+        axis.title.x = element_blank()) + 
+  guides(colour = guide_legend(nrow = 1))
 forest_plot
 ggsave(filename = "~/Documents/speedyCMI/figures/fig5-forest-plot.png", 
        plot = forest_plot, width = 10, height = 5)
 ```
 
-### Comparing Imputation Models 
-
 ```{r}
+forest_dat |> 
+  dplyr::mutate(Est_CI = paste0("$", round(Estimate, 2), "$ ($", round(LB, 2), "$, $", round(UB, 2), "$)")) |> 
+  dplyr::select(Coefficient, Method, Est_CI) |> 
+  tidyr::pivot_wider(names_from = "Method", 
+                     values_from = "Est_CI") |>
+  dplyr::select(Coefficient, "Complete Case Analysis", 
+                "Single Parametric CMI", "Multiple Parametric CMI",
+                "Single Semiparametric CMI", "Multiple Semiparametric CMI", 
+                "Naive Analysis") |> 
+  kableExtra::kable(format = "html", escape = FALSE) |> 
+  kableExtra::kable_styling()
+```
+
+```{r, echo = FALSE, eval = FALSE}
 set.seed(333)
 forest_dat = data.frame()
 for (d in c("lognormal", "weibull", "exponential", "loglogistic", "pwe")) {
@@ -478,7 +544,7 @@ for (d in c("lognormal", "weibull", "exponential", "loglogistic", "pwe")) {
 }
 ```
 
-```{r, fig.width = 8, fig.height = 6, echo = FALSE}
+```{r, eval = FALSE, fig.width = 8, fig.height = 6, echo = FALSE}
 forest_plot = forest_dat |> 
   dplyr::mutate(Coefficient = factor(x = Coefficient, 
                                      levels = c("(Intercept)", "SYSBP0", "TIMEHYP", 
