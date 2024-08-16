@@ -9,7 +9,20 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims.csv")
+sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv")
+
+# Numeric summary
+aic_mat = sett |>
+  dplyr::select(sim, dplyr::starts_with("aic"))
+which_min_aic = apply(X = aic_mat[, -1], MARGIN = 1, FUN = which.min)
+table(which_min_aic)
+## AIC was lowest for log-normal (correctly specified) in 982 / 1000 replications
+
+bic_mat = sett |>
+  dplyr::select(sim, dplyr::starts_with("bic"))
+which_min_bic = apply(X = bic_mat[, -1], MARGIN = 1, FUN = which.min)
+table(which_min_bic)
+## Same for BIC: lowest for log-normal (correctly specified) in 982 / 1000 replications
 
 # Create plot
 sett |>
