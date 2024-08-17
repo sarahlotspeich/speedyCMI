@@ -8,7 +8,7 @@ library(speedyCMI) ## to impute (parametric)
 # /////////////////////////////////////////////////////////////////////////
 # Data generation function for all simulations ////////////////////////////
 # /////////////////////////////////////////////////////////////////////////
-generate_data = function(n, censoring = "light") {
+generate_data = function(n, censoring = "heavy") {
   z = rbinom(n = n, size = 1, prob = 0.5) # Uncensored covariate
   x = rlnorm(n = n, meanlog = 0 + 0.05 * z, sdlog = 0.5) # To-be-censored covariate
   e = rnorm(n = n, mean = 0, sd = 1) # Random errors
@@ -50,17 +50,20 @@ for (s in 1:nrow(sett_lognorm)) {
                               dist = "lognormal",
                               data = dat)
 
-  # Fit model to imputed data
-  fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+  # If imputation model converged, fit analysis model
+  if (imp_dat$code) {
+    # Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
 
-  # Save parameter estimates
-  sett_lognorm[s, c(2:4)] = fit$coefficients
+    # Save parameter estimates
+    sett_lognorm[s, c(2:4)] = fit$coefficients
 
-  # Save standard error estimates
-  sett_lognorm[s, c(5:7)] = sqrt(diag(vcov(fit)))
+    # Save standard error estimates
+    sett_lognorm[s, c(5:7)] = sqrt(diag(vcov(fit)))
 
-  # Save model diagnostics AIC / BIC
-  sett_lognorm[s, c(8:9)] = with(imp_dat, c(aic, bic))
+    # Save model diagnostics AIC / BIC
+    sett_lognorm[s, c(8:9)] = with(imp_dat, c(aic, bic))
+  }
 }
 
 ## Log-Normal
@@ -83,17 +86,20 @@ for (s in 1:nrow(sett_loglog)) {
                               dist = "loglogistic",
                               data = dat)
 
-  # Fit model to imputed data
-  fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+  # If imputation model converged, fit analysis model
+  if (imp_dat$code) {
+    # Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
 
-  # Save parameter estimates
-  sett_loglog[s, c(2:4)] = fit$coefficients
+    # Save parameter estimates
+    sett_loglog[s, c(2:4)] = fit$coefficients
 
-  # Save standard error estimates
-  sett_loglog[s, c(5:7)] = sqrt(diag(vcov(fit)))
+    # Save standard error estimates
+    sett_loglog[s, c(5:7)] = sqrt(diag(vcov(fit)))
 
-  # Save model diagnostics AIC / BIC
-  sett_loglog[s, c(8:9)] = with(imp_dat, c(aic, bic))
+    # Save model diagnostics AIC / BIC
+    sett_loglog[s, c(8:9)] = with(imp_dat, c(aic, bic))
+  }
 }
 
 ## Exponential
@@ -116,17 +122,20 @@ for (s in 1:nrow(sett_expo)) {
                               dist = "exponential",
                               data = dat)
 
-  # Fit model to imputed data
-  fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+  # If imputation model converged, fit analysis model
+  if (imp_dat$code) {
+    # Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
 
-  # Save parameter estimates
-  sett_expo[s, c(2:4)] = fit$coefficients
+    # Save parameter estimates
+    sett_expo[s, c(2:4)] = fit$coefficients
 
-  # Save standard error estimates
-  sett_expo[s, c(5:7)] = sqrt(diag(vcov(fit)))
+    # Save standard error estimates
+    sett_expo[s, c(5:7)] = sqrt(diag(vcov(fit)))
 
-  # Save model diagnostics AIC / BIC
-  sett_expo[s, c(8:9)] = with(imp_dat, c(aic, bic))
+    # Save model diagnostics AIC / BIC
+    sett_expo[s, c(8:9)] = with(imp_dat, c(aic, bic))
+  }
 }
 
 ## Weibull
@@ -149,17 +158,20 @@ for (s in 1:nrow(sett_weibull)) {
                               dist = "weibull",
                               data = dat)
 
-  # Fit model to imputed data
-  fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+  # If imputation model converged, fit analysis model
+  if (imp_dat$code) {
+    # Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
 
-  # Save parameter estimates
-  sett_weibull[s, c(2:4)] = fit$coefficients
+    # Save parameter estimates
+    sett_weibull[s, c(2:4)] = fit$coefficients
 
-  # Save standard error estimates
-  sett_weibull[s, c(5:7)] = sqrt(diag(vcov(fit)))
+    # Save standard error estimates
+    sett_weibull[s, c(5:7)] = sqrt(diag(vcov(fit)))
 
-  # Save model diagnostics AIC / BIC
-  sett_weibull[s, c(8:9)] = with(imp_dat, c(aic, bic))
+    # Save model diagnostics AIC / BIC
+    sett_weibull[s, c(8:9)] = with(imp_dat, c(aic, bic))
+  }
 }
 
 ## Piecewise exponential
@@ -183,17 +195,20 @@ for (s in 1:nrow(sett_pwe)) {
                               nintervals = 10,
                               data = dat)
 
-  # Fit model to imputed data
-  fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
+  # If imputation model converged, fit analysis model
+  if (imp_dat$code) {
+    # Fit model to imputed data
+    fit = lm(y ~ imp + z, data = imp_dat$imputed_data)
 
-  # Save parameter estimates
-  sett_pwe[s, c(2:4)] = fit$coefficients
+    # Save parameter estimates
+    sett_pwe[s, c(2:4)] = fit$coefficients
 
-  # Save standard error estimates
-  sett_pwe[s, c(5:7)] = sqrt(diag(vcov(fit)))
+    # Save standard error estimates
+    sett_pwe[s, c(5:7)] = sqrt(diag(vcov(fit)))
 
-  # Save model diagnostics AIC / BIC
-  sett_pwe[s, c(8:9)] = with(imp_dat, c(aic, bic))
+    # Save model diagnostics AIC / BIC
+    sett_pwe[s, c(8:9)] = with(imp_dat, c(aic, bic))
+  }
 }
 
 # /////////////////////////////////////////////////////////////////////////
