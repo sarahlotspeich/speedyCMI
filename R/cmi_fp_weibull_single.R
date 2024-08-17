@@ -25,10 +25,27 @@ cmi_fp_weibull_single = function(imputation_model, W, Delta, data, maxiter = 100
   data$imp = data[, W] ## start with imp = W
 
   # Fit AFT imputation model for X ~ Z
-  fit = survreg(formula = imputation_model,
-                data = data,
-                dist = "weibull",
-                maxiter = maxiter)
+  fit = tryCatch(expr = survreg(formula = imputation_model,
+                                data = data,
+                                dist = "weibull",
+                                maxiter = maxiter),
+           warning = function(w) {list(linear.predictors = rep(NA, nrow(data)),
+                                       scale = NA)})
+
+  # If imputation model doesn't converge, stop here
+  if(is.na(fit$scale)) {
+    ## Make imp NA for all
+    data$imp = NA
+
+    ## Return input dataset with appended column imp containing imputed values
+    return_list = list(imputed_data = data,
+                       code = !any(is.na(data$imp)),
+                       aic = NA,
+                       bic = NA,
+                       coefficients = NA,
+                       scale = NA)
+    return(return_list)
+  }
 
   # Calculate linear predictor for AFT imputation model
   lp = fit$linear.predictors ## linear predictors
