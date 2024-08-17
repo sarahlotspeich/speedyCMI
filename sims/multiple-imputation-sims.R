@@ -82,10 +82,10 @@ for (s in 1:nrow(sett_old)) {
     )
 
     ## Save parameter estimates
-    sett_old[s, c(4:6)] = mult_imp$Est
+    sett_old[s, c(4:6)] = mult_imp$coeff$Est
 
     ## Save standard error estimates
-    sett_old[s, c(8:10)] = mult_imp$SE
+    sett_old[s, c(8:10)] = mult_imp$coeff$SE
   }
 
   ## Save computing time (for the imputations)
@@ -141,10 +141,10 @@ for (s in 1:nrow(sett_new)) {
     )
 
     ## Save parameter estimates
-    sett_new[s, c(4:6)] = mult_imp$Est
+    sett_new[s, c(4:6)] = mult_imp$coeff$Est
 
     ## Save standard error estimates
-    sett_new[s, c(8:10)] = mult_imp$SE
+    sett_new[s, c(8:10)] = mult_imp$coeff$SE
   }
 
   ## Save computing time (for the imputations)
@@ -201,10 +201,10 @@ for (s in 1:nrow(sett_new2)) {
     )
 
     ## Save parameter estimates
-    sett_new2[s, c(4:6)] = mult_imp$Est
+    sett_new2[s, c(4:6)] = mult_imp$coeff$Est
 
     ## Save standard error estimates
-    sett_new2[s, c(8:10)] = mult_imp$SE
+    sett_new2[s, c(8:10)] = mult_imp$coeff$SE
   }
 
   ## Save computing time (for the imputations)
@@ -258,10 +258,10 @@ for (s in 1:nrow(sett_analytical)) {
     )
 
     ## Save parameter estimates
-    sett_analytical[s, c(4:6)] = mult_imp$Est
+    sett_analytical[s, c(4:6)] = mult_imp$coeff$Est
 
     ## Save standard error estimates
-    sett_analytical[s, c(8:10)] = mult_imp$SE
+    sett_analytical[s, c(8:10)] = mult_imp$coeff$SE
   }
 
   ## Save computing time (for the imputations)
@@ -292,7 +292,7 @@ for (s in 1:nrow(sett_sp)) {
       imp_fit <- cmi_sp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
                                   analysis_model = y ~ imp + z,
                                   data = dat,
-                                  integral = "TR",
+                                  integral = "tr",
                                   surv_between = "cf",
                                   surv_beyond = "d",
                                   B = sett_sp$num_imps[s])
@@ -311,7 +311,7 @@ for (s in 1:nrow(sett_sp)) {
     time_imp = system.time(
       imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z,
                         data = dat,
-                        integral = "TR",
+                        integral = "tr",
                         surv_between = "cf",
                         surv_beyond = "d")
     )
@@ -386,5 +386,5 @@ sett = sett_old |>
                                        n == n,
                                        censoring == censoring))
 sett |>
-  write.csv("speedyCMI/sims/multiple-imputation-sims.csv",
+  write.csv("~/Documents/speedyCMI/sims/multiple-imputation-sims.csv",
             row.names = F)
