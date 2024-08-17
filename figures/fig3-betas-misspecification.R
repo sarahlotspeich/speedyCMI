@@ -9,11 +9,21 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims.csv")
+## Multiple imputation
+mi_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv")
+## Single imputation
+si_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-si.csv")
+## Combine them
+sett = mi_sett |>
+  dplyr::mutate(Imputation = "Multiple Imputation") |>
+  dplyr::bind_rows(
+    si_sett |>
+      dplyr::mutate(Imputation = "Single Imputation")
+  )
 
 # Create plot
 sett |>
-  dplyr::select(sim, dplyr::starts_with("beta")) |>
+  dplyr::select(sim, Imputation, dplyr::starts_with("beta")) |>
   tidyr::pivot_longer(cols = dplyr::starts_with("beta"),
                       names_to = "dist",
                       values_to = "beta") |>
@@ -34,10 +44,13 @@ sett |>
   theme_minimal(base_size = 14) +
   xlab("Distribution for the Imputation Model") +
   ylab("Parameter Estimate") +
-  theme(axis.title = element_text(face = "bold")) +
+  facet_grid(cols = vars(Imputation)) +
+  theme(axis.title = element_text(face = "bold"),
+        strip.background = element_rect(fill = "black"),
+        strip.text = element_text(color = "white")) +
   ggthemes::scale_fill_colorblind() +
   ggthemes::scale_color_colorblind() +
   guides(fill = "none",
          color = "none")
-ggsave(filename = "~/Documents/speedyCMI/figures/fig3-betas-misspecification.png",
+ggsave(filename = "speedyCMI/figures/fig3-betas-misspecification.png",
        device = "png", width = 10, height = 6, units = "in")
