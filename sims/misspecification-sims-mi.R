@@ -8,7 +8,7 @@ library(speedyCMI) ## to impute (parametric)
 # /////////////////////////////////////////////////////////////////////////
 # Data generation function for all simulations ////////////////////////////
 # /////////////////////////////////////////////////////////////////////////
-generate_data = function(n, censoring = "light") {
+generate_data = function(n, censoring = "heavy") {
   z = rbinom(n = n, size = 1, prob = 0.5) # Uncensored covariate
   x = rlnorm(n = n, meanlog = 0 + 0.05 * z, sdlog = 0.5) # To-be-censored covariate
   e = rnorm(n = n, mean = 0, sd = 1) # Random errors
