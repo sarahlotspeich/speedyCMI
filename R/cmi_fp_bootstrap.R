@@ -77,16 +77,62 @@ cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, ninter
                                       data = re_data,
                                       boots = 0)
       }
-
-      # After imputing, fit the analysis model ---------------------------------
-      re_fit = lm(formula = analysis_model,
-                  data = re_data_imp$imputed_data)
     } else {
-      # If no censored, just fit the usual model -------------------------------
-      re_data$imp = re_data[, W]
-      re_fit = lm(formula = analysis_model,
-                  data = re_data)
+      # If no censored, just make imp = W and fit the usual model --------------
+      re_data_imp = list(imputed_data = re_data,
+                         code = TRUE)
+      re_data_imp$imputed_data$imp = re_data[, W]
     }
+
+    # Check for imputation model not converging --------------------------------
+    while (!re_data_imp$code) {
+      # Sample with replacement from the original data -------------------------
+      re_rows = ceiling(runif(n = n, min = 0, max = 1) * nrow(data))
+      re_data = data[re_rows, ]
+
+      # Calculate proportion of censored observations in resampled data --------
+      re_prop_cens = 1 - mean(re_data[, Delta])
+
+      # Check for censoring in resampled data
+      if (0 < re_prop_cens) {
+        # Impute censored x in re_data -----------------------------------------
+        if (type == "analytical") {
+          re_data_imp = cmi_fp_analytical(imputation_model = imputation_model,
+                                          dist = dist,
+                                          data = re_data,
+                                          nintervals = nintervals,
+                                          breaks = breaks,
+                                          boots = 0)
+        } else if (type == "stabilized (with mean)") {
+          re_data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
+                                          dist = dist,
+                                          data = re_data,
+                                          with_mean = TRUE,
+                                          boots = 0)
+        } else if (type == "stabilized (without mean)") {
+          re_data_imp = cmi_fp_stabilized(imputation_model = imputation_model,
+                                          dist = dist,
+                                          data = re_data,
+                                          with_mean = FALSE,
+                                          use_cumulative_hazard = TRUE,
+                                          boots = 0)
+        } else {
+          re_data_imp = cmi_fp_original(imputation_model = imputation_model,
+                                        dist = dist,
+                                        data = re_data,
+                                        boots = 0)
+        }
+      } else {
+        # If no censored, just make imp = W and fit the usual model ------------
+        re_data_imp = list(imputed_data = re_data,
+                           code = TRUE)
+        re_data_imp$imputed_data$imp = re_data[, W]
+      }
+    }
+
+    # Once imputation was successful, fit the analysis model -------------------
+    re_fit = lm(formula = analysis_model,
+                data = re_data_imp$imputed_data)
 
     # Save coefficients to results matrix --------------------------------------
     mult_fit = rbind(mult_fit,
