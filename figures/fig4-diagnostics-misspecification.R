@@ -48,8 +48,8 @@ sett |>
   geom_boxplot(alpha = 0.6) +
   facet_wrap(~diag) +
   theme_minimal(base_size = 14) +
-  xlab("Diagnostic Value") +
-  ylab("Parameter Estimate") +
+  xlab("Distribution for the Imputation Model") +
+  ylab("Diagnostic Value") +
   theme(axis.title = element_text(face = "bold"),
         strip.background = element_rect(fill = "black"),
         strip.text = element_text(color = "white")) +
