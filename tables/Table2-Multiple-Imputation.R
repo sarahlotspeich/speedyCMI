@@ -36,15 +36,12 @@ res_summ = res |>
   mutate(perc_bias_fc = paste0("($", format(round(bias_fc / 0.5 * 100, 2), nsmall = 2), "$)"),
          perc_bias_analytical = paste0("($", format(round(bias_analytical / 0.5 * 100, 2), nsmall = 2), "$)"),
          perc_bias_sp = paste0("($", format(round(bias_sp / 0.5 * 100, 2), nsmall = 2), "$)"),
-         censoring = factor(x = censoring,
-                            levels = c("light", "heavy", "extra_heavy"),
-                            labels = c("Light", "Heavy", "Extra Heavy")),
          re_analytical = ese_fc ^ 2 / ese_analytical ^ 2,
          re_sp = ese_fc ^ 2 / ese_sp ^ 2,
          mid1 = "", mid2 = "", mid3 = "") |>
-  select(censoring, n, starts_with(c("bias", "perc_bias", "ese", "ase", "cp", "re")), everything()) |>
-  arrange(censoring, n) |>
-  select(censoring, n, mid1,
+  select(num_imps, starts_with(c("bias", "perc_bias", "ese", "ase", "cp", "re")), everything()) |>
+  arrange(num_imps) |>
+  select(num_imps, mid1,
          ends_with("_fc"), mid2,
          ends_with("_analytical"), mid3,
          ends_with("_sp"))
