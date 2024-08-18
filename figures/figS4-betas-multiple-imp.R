@@ -13,7 +13,7 @@ sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyC
 
 # Create plot
 sett |>
-  dplyr::select(sim, num_imps, censoring, dplyr::starts_with("beta")) |>
+  dplyr::select(sim, num_imps, censoring, dplyr::starts_with("beta"), -dplyr::ends_with("fc")) |>
   tidyr::gather("integral", "beta", -c(1:3)) |>
   dplyr::mutate(num_imps = factor(x = num_imps,
                                   levels = c(0, 5, 10, 20, 40),
