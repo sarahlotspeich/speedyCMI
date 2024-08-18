@@ -39,7 +39,9 @@ res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCM
                               .default = "beta_analytical"),
          distribution = toupper(sub(pattern = ".*_",
                                     replacement = "",
-                                    x = distribution))) |>
+                                    x = distribution)),
+         distribution = factor(x = distribution,
+                               levels = c("EXPO", "WEIBULL", "LOGNORM", "LOGLOG", "PWE"))) |>
   pivot_wider(names_from = quantity,
               values_from = value)
 res_summ = res |>

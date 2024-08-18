@@ -14,6 +14,7 @@ library(kableExtra) # To format pretty tables
 # Read in simulation results
 ## Full cohort and semiparametric multiple imputation
 oth_res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/single-imputation-sims.csv") |>
+  filter(n == 1000, censoring == "heavy") |>
   select(sim, ends_with(c("fc", "sp")), -starts_with("time")) ## keep only relevant columns
 oth_res_summ = oth_res |>
   dplyr::summarize(bias_fc = mean(beta_fc - 0.5),
@@ -38,9 +39,16 @@ res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCM
                               .default = "beta_analytical"),
          distribution = toupper(sub(pattern = ".*_",
                                     replacement = "",
-                                    x = distribution))) |>
+                                    x = distribution)),
+         distribution = factor(x = distribution,
+                               levels = c("EXPO", "WEIBULL", "LOGNORM", "LOGLOG", "PWE"))) |>
   pivot_wider(names_from = quantity,
               values_from = value)
+
+# Exclude two Weibull reps where the imputation model didn't converge
+res = res |>
+  filter(!is.na(beta_analytical))
+
 res_summ = res |>
   group_by(distribution) |>
   dplyr::summarize(bias_analytical = mean(beta_analytical - 0.5),
