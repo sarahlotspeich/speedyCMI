@@ -9,9 +9,9 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-## Multiple imputation
+## Multiple parametric CMI
 mi_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv")
-## Single imputation
+## Single parametric CMI
 si_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-si.csv")
 ## Combine them
 sett = mi_sett |>
@@ -20,6 +20,22 @@ sett = mi_sett |>
     si_sett |>
       dplyr::mutate(Imputation = "Single Imputation")
   )
+## Multiple semiparametric CMI
+mi_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/multiple-imputation-sims.csv") |>
+  dplyr::filter(n == 1000, censoring == "heavy", num_imps == 10) |>
+  dplyr::select(sim, n, censoring, dplyr::ends_with("sp"))
+## Single parametric CMI
+si_sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/single-imputation-sims.csv") |>
+  dplyr::filter(n == 1000, censoring == "heavy") |>
+  dplyr::select(sim, n, censoring, dplyr::ends_with("sp"))
+## Combine them
+sett = mi_sett |>
+  dplyr::mutate(Imputation = "Multiple Imputation") |>
+  dplyr::bind_rows(
+    si_sett |>
+      dplyr::mutate(Imputation = "Single Imputation")
+  ) |>
+  dplyr::left_join(sett)
 
 # Create plot
 sett |>
@@ -31,8 +47,8 @@ sett |>
                            replacement = "",
                            x = dist),
                 dist = factor(x = dist,
-                              levels = c("expo", "weibull", "pwe", "lognorm", "loglog"),
-                              labels = c("Exponential", "Weibull", "Piecewise\nExponential", "Log-Normal", "Log-Logistic"))
+                              levels = c("expo", "weibull", "pwe", "lognorm", "loglog", "sp"),
+                              labels = c("Exponential", "Weibull", "Piecewise\nExponential", "Log-Normal", "Log-Logistic", "(Semiparametric)"))
                 ) |>
   ggplot(aes(x = dist,
              y = beta,
