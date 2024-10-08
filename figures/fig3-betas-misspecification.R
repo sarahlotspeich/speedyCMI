@@ -69,4 +69,4 @@ sett |>
   guides(fill = "none",
          color = "none")
 ggsave(filename = "speedyCMI/figures/fig3-betas-misspecification.png",
-       device = "png", width = 10, height = 6, units = "in")
+       device = "png", width = 14, height = 6, units = "in")

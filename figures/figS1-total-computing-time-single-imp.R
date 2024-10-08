@@ -21,7 +21,7 @@ sett |>
                                    labels = c("Light Censoring", "Heavy Censoring", "Extra Heavy Censoring")),
                 integral = factor(x = integral,
                                   levels = c("time_sp", "time_old", "time_new2", "time_new", "time_analytical"),
-                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytical Solution)"))
+                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytic Solution)"))
   ) |>
   dplyr::group_by(n, censoring, integral) |>
   dplyr::summarize(total_time = sum(time)) |>

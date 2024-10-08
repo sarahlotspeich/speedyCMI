@@ -20,7 +20,7 @@ sett |>
                                   labels = c("B = 1", "B = 5", "B = 10", "B = 20", "B = 40")),
                 integral = factor(x = integral,
                                   levels = c("beta_sp", "beta_old", "beta_new2", "beta_new", "beta_analytical"),
-                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytical Solution)"))
+                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytic Solution)"))
   ) |>
   ggplot(aes(x = num_imps,
              y = beta,

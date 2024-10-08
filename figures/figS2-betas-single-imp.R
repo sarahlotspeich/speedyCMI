@@ -22,7 +22,7 @@ sett |>
                                    labels = c("Light Censoring", "Heavy Censoring", "Extra Heavy Censoring")),
                 integral = factor(x = integral,
                                   levels = c("beta_sp", "beta_old", "beta_new2", "beta_new", "beta_analytical"),
-                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytical Solution)"))
+                                  labels = c("Semiparametric", "Parametric\n(Original Integral)", "Parametric\n(Stabilized Integral\nWithout Mean)", "Parametric\n(Stabilized Integral\n With Mean)", "Parametric\n(Analytic Solution)"))
   ) |>
   ggplot(aes(x = n,
              y = beta,
