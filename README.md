@@ -212,90 +212,60 @@ cmi_fp_pool_fit(formula = y ~ imp + z,
 
 ## Figures
 
-**Figure 1.** Average computing runtime per-replication for single
-imputation simulations (in seconds). The solid and dashed lines connect
-the mean and median per-replicate computing times, respectively.
-
-<figure>
-<img src="figures/fig1-average-computing-time-weibull-single-imp.png"
-alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+**Figure 1.** Average computing runtime per replicate for single imputation simulations (in seconds). The solid and dashed lines connect the mean and median per-replicate computing times, respectively, across 1000 replicates.
 
 - [Script (Run Simulations)](sims/single-imputation-sims.R)
-- [Script (Make
-  Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
+- [Script (Make Figure)](figures/fig1-average-computing-time-weibull-single-imp.R)
 - [Data (Simulation Results)](sims/single-imputation-sims.csv)
 
-**Figure 2.** Estimates of $\beta_1$, the parameter on the censored
-covariate $X$ in the linear regression analysis model, resulting from
-each single imputation approach. The horizontal dashed line denotes the
-true value of $\beta_1 = 0.5$.
+**Figure 2.** Average computing runtime per-replicate for imputation simulations (in seconds) with an increasing number of imputations $B$. The solid and dashed lines connect the mean and median per-replicate computing times, respectively. Censoring was heavy, and $n = 1000$ subjects were simulated per replicate.
 
-<figure>
-<img src="figures/fig2-betas-weibull-single-imp.png" alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make Figure)](figures/fig2-average-computing-time-multiple-imp.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Figure 3.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from the multiple ($B = 10$) and single parametric CMI approaches assuming different distributions for the imputation model of $X$ given $Z$. The true distribution for $X$ given $Z$ was log-normal, and the horizontal dashed line denotes the true value of $\beta_1 = 0.5$. 
+
+- [Script (Run Simulations)](sims/misspecification-sims-mi.R)
+- [Script (Make Figure)](figures/fig3-betas-misspecification.R)
+- [Data (Simulation Results)](sims/misspecification-sims-mi.csv)
+
+**Figure 4.** Model diagnostics Akaike information criterion (AIC) and Bayesian information criterion (BIC) for the parametric imputation model of $X$ given $Z$. The true distribution was log-normal.
+
+- [Script (Run Simulations)](sims/misspecification-sims-mi.R)
+- [Script (Make Figure)](figures/fig4-diagnostics-misspecification.R)
+- [Data (Simulation Results)](sims/misspecification-sims-mi.csv)
+
+**Figure 5.** Model diagnostics Akaike information criterion (AIC) and Bayesian information criterion (BIC) for the parametric imputation model of $X$ given $Z$. The true distribution was log-normal.
+
+- [Script (Fit Models and Make Figure)](framingham/framingham.Rmd)
+- [Data (Framingham Teaching data)](https://rdrr.io/cran/riskCommunicator/man/framingham.html)
+
+**Figure S1.** Total computing runtime across 1000 replicates for single imputation simulations (in seconds).
 
 - [Script (Run Simulations)](sims/single-imputation-sims.R)
-- [Script (Make Figure)](figures/fig2-betas-weibull-single-imp.R)
+- [Script (Make Figure)](figures/figS1-total-computing-time-single-imp.R)
 - [Data (Simulation Results)](sims/single-imputation-sims.csv)
 
-**Figure 3.** Average computing runtime per-replication for imputation
-simulations (in seconds) with an increasing number of imputations $B$.
-The solid and dashed lines connect the mean and median per-replicate
-computing times, respectively.
-
-<figure>
-<img src="figures/fig3-average-computing-time-weibull-multiple-imp.png"
-alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
-
-- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-- [Script (Make
-  Figure)](figures/fig3-average-computing-time-weibull-multiple-imp.R)
-- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
-
-**Figure 4.** Estimates of $\beta_1$, the parameter on the censored
-covariate $X$ in the linear regression analysis model, resulting from
-each imputation approach with an increasing number of imputations $B$.
-The horizontal dashed line denotes the true value of $\beta_1 = 0.5$.
-
-<figure>
-<img src="figures/fig4-betas-weibull-multiple-imp.png" alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
-
-- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-- [Script (Make Figure)](figures/fig4-betas-weibull-multiple-imp.R)
-- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
-
-**Figure S1.** Total computing runtime across 1000 replicates for single
-imputation simulations (in seconds).
-
-<figure>
-<img src="figures/figS1-total-computing-time-weibull-single-imp.png"
-alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+**Figure S2.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from each single imputation approach. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$.
 
 - [Script (Run Simulations)](sims/single-imputation-sims.R)
-- [Script (Make
-  Figure)](figures/figS1-total-computing-time-weibull-single-imp.R)
+- [Script (Make Figure)](figures/figS2-betas-single-imp.R)
 - [Data (Simulation Results)](sims/single-imputation-sims.csv)
 
-**Figure S2.** Total computing runtime across 1000 replicates for
-imputation simulations (in seconds) with an increasing number of
-imputations $B$.
-
-<figure>
-<img src="figures/figS2-total-computing-time-weibull-multiple-imp.png"
-alt="alt text" />
-<figcaption aria-hidden="true">alt text</figcaption>
-</figure>
+**Figure S3.** Total computing runtime across 1000 replication for imputation simulations (in seconds) with an increasing number of imputations $B$. Censoring was heavy, and $n = 1000$ subjects were simulated per replicate.
 
 - [Script (Run Simulations)](sims/multiple-imputation-sims.R)
-- [Script (Make
-  Figure)](figures/figS2-total-computing-time-weibull-multiple-imp.R)
+- [Script (Make Figure)](figures/figS3-total-computing-time-multiple-imp.R)
 - [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Figure S4.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from each imputation approach with an increasing number of imputations $B$. The horizontal dashed line denotes the true value of $\beta_1 = 0.5$. Censoring was heavy, and $n = 1000$ subjects were simulated per replicate.
+
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make Figure)](figures/figS4-betas-multiple-imp.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Figure S5.** Empirical density of time from first visit to hypertension diagnosis (observed or singly imputed) in the Framingham teaching dataset using various distributions for the imputation model. The vertical dashed line denotes $TIME = 25$ years to hypertension diagnosis, which was the end of follow-up.
+
+- [Script (Fit Models and Make Figure)](framingham/framingham.Rmd)
+- [Data (Framingham Teaching data)](https://rdrr.io/cran/riskCommunicator/man/framingham.html)
