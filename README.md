@@ -269,3 +269,28 @@ cmi_fp_pool_fit(formula = y ~ imp + z,
 
 - [Script (Fit Models and Make Figure)](framingham/framingham.Rmd)
 - [Data (Framingham Teaching data)](https://rdrr.io/cran/riskCommunicator/man/framingham.html)
+
+## Tables
+
+**Table 1.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from the full cohort analysis (i.e., no censored values) and parametric and semiparametric single conditional mean imputation (CMI). 
+
+- [Script (Run Simulations)](sims/single-imputation-sims.R)
+- [Script (Make Table)](table/Table1-Single-Imputation.R)
+- [Data (Simulation Results)](sims/single-imputation-sims.csv)
+
+**Table 2.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from the full cohort analysis (i.e., no censored values) and parametric and semiparametric multiple conditional mean imputation (CMI) with $B$ imputations. Censoring was heavy, and $n = 1000$ subjects were simulated per replicate.
+
+- [Script (Run Simulations)](sims/multiple-imputation-sims.R)
+- [Script (Make Table)](table/Table2-Multiple-Imputation.R)
+- [Data (Simulation Results)](sims/multiple-imputation-sims.csv)
+
+**Table 3.** Estimates of $\beta_1$, the parameter on the censored covariate $X$ in the linear regression analysis model, resulting from the full cohort analysis (i.e., no censored values) and parametric and semiparametric single and multiple conditional mean imputation (CMI). Different distributions for the parametric CMI imputation model were considered.
+
+- [Script (Run Simulations)](sims/misspecification-sims-mi.R)
+- [Script (Make Table)](table/Table3-Misspecification-MI.R)
+- [Data (Simulation Results)](sims/misspecification-sims-mi.csv)
+
+**Table 4.** Summary of candidate imputation models considered for the Framingham teaching dataset.
+
+- [Script (Fit Models and Make Table)](framingham/framingham.Rmd)
+- [Data (Framingham Teaching data)](https://rdrr.io/cran/riskCommunicator/man/framingham.html)
