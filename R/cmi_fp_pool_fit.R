@@ -31,7 +31,7 @@ cmi_fp_pool_fit = function(analysis_model, mult_imp) {
   beta_b = matrix(data = mult_fit[, 1],
                   nrow = B,
                   byrow = TRUE)
-  vbeta_b = matrix(data = mult_fit[, 2],
+  vbeta_b = matrix(data = mult_fit[, 2]^2,
                    nrow = B,
                    byrow = TRUE)
 
@@ -43,7 +43,7 @@ cmi_fp_pool_fit = function(analysis_model, mult_imp) {
                            byrow = TRUE)
   vbeta_within = colMeans(vbeta_b)
   vbeta_between = colSums((beta_b - beta_pooled_rep) ^ 2) / (B - 1)
-  vbeta_pooled = vbeta_within + vbeta_between
+  vbeta_pooled = vbeta_within + (1 + 1/B) * vbeta_between
 
   # Create table of estimates
   res = data.frame(Est = beta_pooled,
