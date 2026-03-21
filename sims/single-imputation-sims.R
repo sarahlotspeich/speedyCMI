@@ -6,7 +6,6 @@
 # Load packages
 library(imputeCensRd) ## to impute (semiparametric)
 library(speedyCMI) ## to impute (parametric)
-library(ggplot2) ## to plot results
 
 # /////////////////////////////////////////////////////////////////////////
 # Data generation function for all simulations ////////////////////////////
