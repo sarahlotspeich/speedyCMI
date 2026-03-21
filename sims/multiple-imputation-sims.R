@@ -6,7 +6,6 @@
 # Load packages
 library(imputeCensRd) ## to impute (semiparametric)
 library(speedyCMI) ## to impute (parametric)
-library(ggplot2) ## to plot results
 
 # /////////////////////////////////////////////////////////////////////////
 # Data generation function for all simulations ////////////////////////////
@@ -386,5 +385,5 @@ sett = sett_old |>
                                        n == n,
                                        censoring == censoring))
 sett |>
-  write.csv("~/Documents/speedyCMI/sims/multiple-imputation-sims.csv",
+  write.csv("speedyCMI/sims/multiple-imputation-sims.csv",
             row.names = F)
