@@ -291,7 +291,7 @@ for (s in 1:nrow(sett_sp)) {
       imp_fit <- cmi_sp_bootstrap(imputation_model = Surv(time = w, event = d) ~ z,
                                   analysis_model = y ~ imp + z,
                                   data = dat,
-                                  integral = "tr",
+                                  trapezoidal_rule = TRUE,
                                   surv_between = "cf",
                                   surv_beyond = "d",
                                   B = sett_sp$num_imps[s])
@@ -310,7 +310,7 @@ for (s in 1:nrow(sett_sp)) {
     time_imp = system.time(
       imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z,
                         data = dat,
-                        integral = "tr",
+                        trapezoidal_rule = TRUE,
                         surv_between = "cf",
                         surv_beyond = "d")
     )
