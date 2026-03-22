@@ -30,7 +30,7 @@ oth_res_summ = oth_res |>
          re_sp = ese_fc ^ 2 / ese_sp ^ 2,
          mid1 = "", mid2 = "", mid3 = "")
 ## Parametric multiple imputation
-res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv") |>
+res = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/refs/heads/master/sims/misspecification-sims-mi.csv") |>
   select(sim, starts_with(c("beta", "se_beta"))) |>
   pivot_longer(cols = starts_with(c("beta", "se_beta")),
                names_to = "distribution",
