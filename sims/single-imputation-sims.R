@@ -205,7 +205,7 @@ for (s in 1:nrow(sett_sp)) {
   time_imp = system.time(
     imp_dat <- cmi_sp(imputation_model = Surv(time = w, event = d) ~ z,
                       data = dat,
-                      integral = "tr",
+                      trapezoidal_rule = TRUE,
                       surv_between = "cf",
                       surv_beyond = "d")
   )
