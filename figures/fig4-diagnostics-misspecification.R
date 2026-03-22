@@ -9,12 +9,13 @@
 library(ggplot2) ## for plots
 
 # Load simulation results from GitHub
-sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/master/sims/misspecification-sims-mi.csv")
+sett = read.csv(file = "https://raw.githubusercontent.com/sarahlotspeich/speedyCMI/refs/heads/master/sims/misspecification-sims-mi.csv")
+sett = read.csv(file = "~/Documents/speedyCMI/sims/misspecification-sims-mi.csv")
 
 # Numeric summary
 aic_mat = sett |>
   dplyr::select(sim, dplyr::starts_with("aic"))
-which_min_aic = apply(X = aic_mat[, -1], MARGIN = 1, FUN = which.min)
+which_min_aic = apply(X = aic_mat[, -1], MARGIN = 1, FUN = function(x) colnames(aic_mat[, -1])[which.min(x)])
 table(which_min_aic)
 ## AIC was lowest for log-normal (correctly specified) in 982 / 1000 replications
 
@@ -41,6 +42,7 @@ sett |>
                               levels = c("expo", "weibull", "pwe", "lognorm", "loglog"),
                               labels = c("Exponential", "Weibull", "Piecewise\nExponential", "Log-Normal", "Log-Logistic"))
                 ) |>
+  dplyr::filter(val > 0) |>
   ggplot(aes(x = dist,
              y = val,
              col = dist,
