@@ -152,12 +152,23 @@ cmi_fp_bootstrap = function(imputation_model, dist, analysis_model, data, ninter
                        group = rep(x = 1:p, times = B)) / (B - 1)
 
   ## Pool variance
-  pooled_var = within_var + between_var + (between_var / B)
+  ### Rubin's formula (not consistent)
+  rubin_pooled_var = within_var + (1 + 1 / B) * between_var
+
+  ### Bernhardt's approximation to the correct formula (eq. 9)
+  #### Fit complete-case model to get "initial" estimates and information
+  cc_data = data[data[, Delta] == 1, ]
+  cc_fit = lm(formula = analysis_model,
+              data = cc_data)
+  initial_var = diag(vcov(cc_fit))
+  bernhardt_pooled_var = rubin_pooled_var +
+    (between_var / within_var) * initial_var * (between_var / within_var)
 
   # Return table of pooled estimates
   tab = data.frame(Coefficient = names(naive_fit$coefficients),
                    Est = pooled_est,
-                   SE = sqrt(pooled_var))
+                   Rubin_SE = sqrt(rubin_pooled_var),
+                   Bernhardt_SE = sqrt(bernhardt_pooled_var))
 
   # Fit imputation model to original data to get model diagnostics
   # Impute censored x in re_data -------------------------------------------
