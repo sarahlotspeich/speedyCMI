@@ -3,13 +3,14 @@
 #' Fit analysis model to each imputed dataset and pool the results using Rubin's rules
 #'
 #' @param analysis_model imputation model formula (or coercible to formula) passed through to \code{survreg}, a formula expression as for other regression models. The response is usually a survival object as returned by the \code{Surv} function. See \code{survreg} documentation for more details.
-#' @param mult_imp a list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions
+#' @param mult_imp list (or list of lists) of imputed datasets returned from one of the \code{cmi_fp} functions
+#' @param rubins_rules logical, if \code{rubins_rules = TRUE} (the default) Rubin's Rules are used to calculate the pooled variance. If \code{rubins_rules = FALSE}, the approximation from Bernhardt et al. (2014) is used instead.
 #'
 #' @return A dataframe containing the pooled coefficients and standard errors for \code{analysis_model}
 
 #'
 #' @export
-cmi_fp_pool_fit = function(analysis_model, mult_imp) {
+cmi_fp_pool_fit = function(analysis_model, mult_imp, rubins_rules = TRUE) {
   # Define the number of imputations
   B = length(mult_imp)
 
@@ -41,9 +42,22 @@ cmi_fp_pool_fit = function(analysis_model, mult_imp) {
                            nrow = B,
                            ncol = p,
                            byrow = TRUE)
+
+  ## Pooled variance(s)
   vbeta_within = colMeans(vbeta_b)
   vbeta_between = colSums((beta_b - beta_pooled_rep) ^ 2) / (B - 1)
-  vbeta_pooled = vbeta_within + (1 + 1/B) * vbeta_between
+  if (rubins_rules) {
+    vbeta_pooled = vbeta_within + (1 + 1 / B) * vbeta_between
+  } else {
+    ## Bernhardt's approximation to the correct formula (eq. 9)
+    ## Fit complete-case model to get "initial" estimates and information
+    cc_data = data[data[, Delta] == 1, ]
+    cc_fit = lm(formula = analysis_model,
+                data = cc_data)
+    vbeta_initial = diag(vcov(cc_fit))
+    vbeta_pooled = vbeta_within + (1 + 1 / B) * vbeta_between  +
+      (vbeta_between / vbeta_within) * vbeta_initial * (vbeta_between / vbeta_within)
+  }
 
   # Create table of estimates
   res = data.frame(Est = beta_pooled,
